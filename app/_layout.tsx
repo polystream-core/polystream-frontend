@@ -2,7 +2,7 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { Stack } from "expo-router";
 import { useEffect } from 'react';
-import { loadFonts } from '../constants/Fonts';
+import { loadFonts } from '../src/constants/Fonts';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -18,6 +18,12 @@ export default function RootLayout() {
   if (!loaded && !error) {
     return null;
   }
-  
-  return <Stack />;
+
+  return <Stack
+    screenOptions={{
+      headerShown: false
+    }}>
+    <Stack.Screen name="sign-in
+    "/>
+  </Stack>;
 }
