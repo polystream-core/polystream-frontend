@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/yangdingcheok/Documents/GitHub/polystream-frontend",
+      "program": "/Users/yangdingcheok/Documents/GitHub/polystream-frontend/build/Debug/outDebug"
+    }
+  ]
+}
