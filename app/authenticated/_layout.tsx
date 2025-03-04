@@ -20,6 +20,9 @@ export default function RootLayout() {
           screenOptions={{
             headerShown: false
           }}
-          ></Stack>
+          >
+            <Stack.Screen
+            name='polystream-vault' />
+          </Stack>
     );
 }

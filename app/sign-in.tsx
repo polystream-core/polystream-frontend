@@ -5,21 +5,40 @@ import CustomButton from "@/src/components/buttons/CustomButton";
 import Circle from "@/src/components/Circle";
 import { useLogin, useLoginWithEmail } from "@privy-io/expo";
 import { router } from "expo-router";
+import { useState } from "react";
+import Loading from "@/src/components/Loading";
 // import { PRIVY_APP_ID } from "@env";
 
 export default function SignInPage() {
     const email: string = "yangdingcheok@gmail.com";
-    const {login} = useLogin();
-    
+    const { login } = useLogin();
+    const [loading, setLoading] = useState(false);
+
     async function signInAction() {
         console.log("Sign in pressed");
-        login({ loginMethods: ['email']})
-            .then((session) => {
-                console.log("User logged in: ", session);
-            })
-            .then(
-                () => router.setParams({screen: "/authenticated"})
-            )
+        setLoading(true);
+        try{
+            login({ loginMethods: ['email'] })
+                .then((session) => {
+                    console.log("Session: ", session);
+                    if (session) {
+                        console.log("User logged in: ", session);
+                        setLoading(false);
+                        router.push('/authenticated')
+                    } else {
+                        setLoading(false);
+                    }
+                })
+        } catch (e) {
+            console.log("Login error: ", e);
+        } finally {
+            setLoading(false);
+        }
+        
+    }
+
+    if (loading) {
+        return <Loading message="Signing in" />;
     }
 
     return (

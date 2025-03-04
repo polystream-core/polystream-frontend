@@ -1,4 +1,4 @@
-import { View, Image, Text, StyleSheet } from "react-native";
+import { View, Image, Text, StyleSheet, Pressable } from "react-native";
 import { colors } from "../constants/Colors";
 import { images } from "../constants/Images";
 import { fonts } from "../constants/Fonts";
@@ -7,6 +7,7 @@ import { fonts } from "../constants/Fonts";
 type ActionItem = {
     icon: any; // Using 'any' for image source type
     label: string;
+    onPress: () => void;
 };
 
 type ActionBarProps = {
@@ -14,8 +15,8 @@ type ActionBarProps = {
 };
 
 export default function ActionBar({ actions = [
-    { icon: images.add, label: "Add" },
-    { icon: images.send, label: "Send" }
+    { icon: images.add, label: "Add", onPress: () => console.log("Add pressed") },
+    { icon: images.send, label: "Send", onPress: () => console.log("Send pressed") },
 ] }: ActionBarProps) {
     const styles = StyleSheet.create({
         actionContainer: {
@@ -24,7 +25,6 @@ export default function ActionBar({ actions = [
             alignSelf: "center",
             borderRadius: 10,
             paddingVertical: 20,
-            marginTop: "-15%",
             shadowOffset: {
                 width: 0,
                 height: 3,
@@ -39,28 +39,29 @@ export default function ActionBar({ actions = [
             alignItems: "center",
         },
         actionIcon: {
-            width: 36,
-            height: 36,
+            width: 30,
+            height: 30,
             marginBottom: 6
         },
         actionText: {
             textAlign: "center",
             fontSize: 14,
-            fontFamily: fonts.primary.light
+            padding: 1,
+            fontFamily: fonts.primary.regular
         }
     });
 
     return (
         <View style={styles.actionContainer}>
             {actions.map((action, index) => (
-                <View key={`action-${index}`} style={styles.childAction}>
+                <Pressable key={`action-${index}`} onPress={action.onPress} style={styles.childAction}>
                     <Image
                         source={action.icon}
                         style={styles.actionIcon}
                         resizeMode="contain"
                     />
                     <Text style={styles.actionText}>{action.label}</Text>
-                </View>
+                </Pressable>
             ))}
         </View>
     );

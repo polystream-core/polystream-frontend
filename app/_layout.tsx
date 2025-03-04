@@ -1,40 +1,64 @@
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { Slot, Stack, useRouter } from "expo-router";
-import { useEffect } from 'react';
+import { Slot, useRouter } from "expo-router";
+import { useEffect, useState, useCallback } from 'react';
 import { loadFonts } from '../src/constants/Fonts';
 import { PrivyElements, PrivyProvider, usePrivy } from '@privy-io/expo';
+import SignInPage from './sign-in';
+import Loading from '@/src/components/Loading';
+import { View } from 'react-native';
+import CustomSplashScreen from '@/src/components/SplashScreen';
 
+// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const [loaded, error] = useFonts(loadFonts);
-
-  useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error]);
-
-  if (!loaded && !error) {
-    return null;
-  }
-
-  // This component renders after PrivyProvider is initialized
 function AuthenticationGuard() {
-  const { user } = usePrivy();
+  const { user, isReady } = usePrivy();
   const router = useRouter();
-
-  // Handle authentication redirection
+  const [fontsLoaded, fontError] = useFonts(loadFonts);
+  const [appIsReady, setAppIsReady] = useState(false);
+  
   useEffect(() => {
-    if (user) {
-      router.replace("/authenticated");
+    async function prepare() {
+      try {
+        // Wait for fonts to load and Privy to be ready
+        if (fontsLoaded && isReady) {
+          // Delay slightly to ensure everything is properly initialized
+          await new Promise(resolve => setTimeout(resolve, 500));
+          setAppIsReady(true);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
     }
-  }, [user, router]);
+    
+    prepare();
+  }, [fontsLoaded, isReady]);
 
-  return <Slot />;
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      // This tells the splash screen to hide immediately
+      await SplashScreen.hideAsync();
+      
+      // Navigate if user is authenticated
+      if (user) {
+        router.push("/authenticated");
+      }
+    }
+  }, [appIsReady, user, router]);
+
+  if (!appIsReady) {
+    return null; // Return null instead of Loading to keep splash screen visible
+  }
+  
+  return (
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      {user ? <Slot /> : <SignInPage />}
+    </View>
+  );
 }
 
+export default function RootLayout() {
   return (
     <PrivyProvider
       appId="REDACTED"
