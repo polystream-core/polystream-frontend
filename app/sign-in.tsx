@@ -3,8 +3,25 @@ import { fonts } from "../src/constants/Fonts";
 import { colors } from "../src/constants/Colors";
 import CustomButton from "@/src/components/buttons/CustomButton";
 import Circle from "@/src/components/Circle";
+import { useLogin, useLoginWithEmail } from "@privy-io/expo";
+import { router } from "expo-router";
+// import { PRIVY_APP_ID } from "@env";
 
 export default function SignInPage() {
+    const email: string = "yangdingcheok@gmail.com";
+    const {login} = useLogin();
+    
+    async function signInAction() {
+        console.log("Sign in pressed");
+        login({ loginMethods: ['email']})
+            .then((session) => {
+                console.log("User logged in: ", session);
+            })
+            .then(
+                () => router.setParams({screen: "/authenticated"})
+            )
+    }
+
     return (
         <View style={styles.container}>
             <Image style={styles.image} source={require("../src/assets/images/scroll-media-2.png")} resizeMode="contain" />
@@ -12,7 +29,7 @@ export default function SignInPage() {
             <Text style={styles.subtitle}>
                 Optimize Your Crypto Earnings with Smart Yield Strategies. Zero Knowledge Required.
             </Text>
-            <Pressable onPress={() => console.log("Sign in")}>
+            <Pressable onPress={signInAction}>
                 <CustomButton title="Sign in" />
             </Pressable>
             <View style={styles.horiContainer}>
@@ -68,8 +85,8 @@ const styles = StyleSheet.create({
         height: 14,
         width: 50,
     },
-    logoBg: { 
-        backgroundColor: colors.red.primary, 
+    logoBg: {
+        backgroundColor: colors.red.primary,
         borderRadius: 5,
         paddingVertical: 2,
         paddingHorizontal: 5,

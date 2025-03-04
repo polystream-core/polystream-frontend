@@ -3,6 +3,7 @@ export const fonts = {
         light: 'FT Polar Light',
         regular: 'FT Polar Regular',
         medium: 'FT Polar Medium',
+        semibold: 'FT Polar SemiBold',
         bold: 'FT Polar Bold'
     },
     secondary: {
@@ -17,6 +18,7 @@ export const loadFonts = {
     [fonts.primary.light]: require('../assets/fonts/FTPolar/FTPolarTrialLight.otf'),
     [fonts.primary.regular]: require('../assets/fonts/FTPolar/FTPolarTrialRegular.otf'),
     [fonts.primary.medium]: require('../assets/fonts/FTPolar/FTPolarTrialMedium.otf'),
+    [fonts.primary.semibold]: require('../assets/fonts/FTPolar/FTPolarTrialSemibold.otf'),
     [fonts.primary.bold]: require('../assets/fonts/FTPolar/FTPolarTrialBold.otf'),
     [fonts.secondary.light]: require('../assets/fonts/TransSans/trnsl.ttf'),
     [fonts.secondary.regular]: require('../assets/fonts/TransSans/trnss.ttf'),

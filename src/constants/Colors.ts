@@ -1,4 +1,26 @@
-export const colors = {
+type HexColor = `#${string}`;
+
+interface ColorShades {
+  primary: HexColor;
+  color01: HexColor;
+  color02: HexColor;
+  color03: HexColor;
+}
+
+interface GreyShades extends ColorShades {
+  color04: HexColor;
+  white: HexColor;
+}
+
+interface ColorPalette {
+  beige: ColorShades;
+  red: ColorShades;
+  cyan: ColorShades;
+  black: ColorShades;
+  grey: GreyShades;
+}
+
+export const colors: ColorPalette = {
   beige: {
     primary: '#FFEEDA',
     color01: '#EBC28E',
