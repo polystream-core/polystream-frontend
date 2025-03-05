@@ -1,4 +1,4 @@
-import { formatNumberWithCommas } from "@/src/assets/utils/numberToText";
+import { formatNumberWithCommas } from "@/src/utils/numberToText";
 import ActionBar from "@/src/components/ActionBar";
 import VaultButton from "@/src/components/buttons/VaultButton";
 import { colors } from "@/src/constants/Colors";
