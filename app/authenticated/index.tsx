@@ -1,12 +1,15 @@
+import React, { useState } from "react";
 import { formatNumberWithCommas } from "@/src/utils/numberToText";
 import ActionBar from "@/src/components/ActionBar";
 import VaultButton from "@/src/components/buttons/VaultButton";
+import TransakWidget from "@/src/components/transak/TransakWidget";
 import { colors } from "@/src/constants/Colors";
 import { fonts } from "@/src/constants/Fonts";
 import { images } from "@/src/constants/Images";
 import { usePrivy } from "@privy-io/expo";
 import { router } from "expo-router";
 import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
+import SuccessPopup from "@/src/components/transak/SuccessPopup";
 
 const styles = StyleSheet.create({
   bg: {
@@ -53,67 +56,111 @@ const styles = StyleSheet.create({
     // position: "absolute",
   },
   actionBarContainer: {
-    alignSelf: 'center',
+    alignSelf: "center",
     marginTop: -60, // Negative margin to overlap with topContainer
     zIndex: 2,
   },
   scrollViewContainer: {
     flex: 1,
-    width: '100%',
+    width: "100%",
     paddingTop: 0,
   },
   contentContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: 10,
-    paddingBottom: 30
+    paddingBottom: 30,
   },
-})
+});
 
 function HomeScreen() {
-  const {logout} = usePrivy();
+  const { logout } = usePrivy();
+  const [showTransak, setShowTransak] = useState(false);
+  const [showTopUpSuccessPopup, setShowTopUpSuccessPopup] = useState(false);
 
+  const handleTransakClose = () => {
+    setShowTransak(false);
+    setShowTopUpSuccessPopup(true);
+  };
   return (
     <View style={styles.bg}>
       <View style={styles.topContainer}>
         <View style={styles.balanceContainer}>
-          <Image source={images.guarded} style={styles.imageLogo} resizeMode="contain" />
+          <Image
+            source={images.guarded}
+            style={styles.imageLogo}
+            resizeMode="contain"
+          />
           <Text style={styles.balanceCurrency}>USD </Text>
-          <Text style={styles.balanceValue}>{formatNumberWithCommas(90000)}</Text>
+          <Text style={styles.balanceValue}>
+            {formatNumberWithCommas(90000)}
+          </Text>
         </View>
-        <Image source={images["eth_crystal"]} style={styles.topContainerImage} resizeMode="contain" />
+        <Image
+          source={images["eth_crystal"]}
+          style={styles.topContainerImage}
+          resizeMode="contain"
+        />
       </View>
 
       <View style={styles.actionBarContainer}>
-        <ActionBar actions={[
-          { icon: images.add, label: "Add", onPress: () => console.log("Add pressed") },
-          { icon: images.send, label: "Send", onPress: () => console.log("Send pressed") },
-          { icon: images.log_out, label: "Log out", onPress: () => logout() },
-        ]} />
+        <ActionBar
+          actions={[
+            {
+              icon: images.add,
+              label: "Add",
+              onPress: () => {
+                console.log("Add pressed");
+                setShowTransak(true);
+              },
+            },
+            {
+              icon: images.send,
+              label: "Send",
+              onPress: () => console.log("Send pressed"),
+            },
+            { icon: images.log_out, label: "Log out", onPress: () => logout() },
+          ]}
+        />
       </View>
 
-      <ScrollView style={styles.scrollViewContainer} contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        style={styles.scrollViewContainer}
+        contentContainerStyle={styles.contentContainer}
+      >
         <VaultButton
-          vaultName='Wallet'
+          vaultName="Wallet"
           balance={90000}
-          currency='USD'
-          notes='+5.2% APY'
-          status='inactive'
+          currency="USD"
+          notes="+5.2% APY"
+          status="inactive"
           imageSrc={images.eth_crystal_floating}
-          onPress={() => console.log('Vault button pressed')}
+          onPress={() => console.log("Vault button pressed")}
         ></VaultButton>
         <VaultButton
-          vaultName='Polystream Vault'
+          vaultName="Polystream Vault"
           balance={82000}
-          currency='USD'
-          notes='+69.2% APY'
-          status='active'
+          currency="USD"
+          notes="+69.2% APY"
+          status="active"
           imageSrc={images.scroll_media_4}
           onPress={() => {
-            console.log('Vault button pressed')
-            router.navigate('/authenticated/polystream-vault')
+            console.log("Vault button pressed");
+            router.navigate("/authenticated/polystream-vault");
           }}
         ></VaultButton>
       </ScrollView>
+
+      {showTransak && (
+        <TransakWidget visible={showTransak} onClose={handleTransakClose} />
+      )}
+
+      {/* Render the SuccessPopup when showPopup is true */}
+      {showTopUpSuccessPopup && (
+        <SuccessPopup
+          visible={showTopUpSuccessPopup}
+          onClose={() => setShowTopUpSuccessPopup(false)}
+        />
+      )}
     </View>
   );
 }
