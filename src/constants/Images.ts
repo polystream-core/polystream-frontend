@@ -14,4 +14,5 @@ export const images = {
     "tick": require("../assets/images/tick.png"),
     "pending": require("../assets/images/pending.png"),
     "cross": require("../assets/images/cross.png"),
+    "polystream_logo_bg": require("../assets/images/polystream_logo_bg.png")
 }

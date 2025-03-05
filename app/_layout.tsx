@@ -6,7 +6,7 @@ import { loadFonts } from '../src/constants/Fonts';
 import { PrivyElements, PrivyProvider, usePrivy } from '@privy-io/expo';
 import SignInPage from './sign-in';
 import { View } from 'react-native';
-import Constants from 'expo-constants';
+import { env } from '@/src/constants/AppConfig';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -64,8 +64,8 @@ export default function RootLayout() {
 
   return (
     <PrivyProvider
-      appId={PRIVY_APP_ID}
-      clientId={PRIVY_CLIENT_ID}
+      appId={env.PRIVY_APP_ID}
+      clientId={env.PRIVY_CLIENT_ID}
     >
       <PrivyElements />
       <AuthenticationGuard />
