@@ -59,9 +59,6 @@ function AuthenticationGuard() {
 }
 
 export default function RootLayout() {
-  const PRIVY_APP_ID = Constants.expoConfig?.extra?.PRIVY_APP_ID;
-  const PRIVY_CLIENT_ID = Constants.expoConfig?.extra?.PRIVY_CLIENT_ID;
-
   return (
     <PrivyProvider
       appId={env.PRIVY_APP_ID}
