@@ -59,6 +59,7 @@ function AuthenticationGuard() {
 }
 
 export default function RootLayout() {
+
   return (
     <PrivyProvider
       appId={env.PRIVY_APP_ID}

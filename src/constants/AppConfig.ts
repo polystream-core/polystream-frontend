@@ -4,6 +4,7 @@ export const env = {
     PRIVY_APP_ID: Constants.expoConfig?.extra?.PRIVY_APP_ID,
     PRIVY_CLIENT_ID: Constants.expoConfig?.extra?.PRIVY_CLIENT_ID,
     PRIVY_CHAIN_ID: Constants.expoConfig?.extra?.PRIVY_CHAIN_ID,
+    TRANSAK_API_KEY: Constants.expoConfig?.extra?.TRANSAK_API_KEY,
 }
 
 export const appConfig = {
