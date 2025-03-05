@@ -5,12 +5,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { loadFonts } from '../src/constants/Fonts';
 import { PrivyElements, PrivyProvider, usePrivy } from '@privy-io/expo';
 import SignInPage from './sign-in';
-import Loading from '@/src/components/Loading';
 import { View } from 'react-native';
-import CustomSplashScreen from '@/src/components/SplashScreen';
+import { env } from '@/src/constants/AppConfig';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
+
 
 function AuthenticationGuard() {
   const { user, isReady } = usePrivy();
@@ -59,10 +59,13 @@ function AuthenticationGuard() {
 }
 
 export default function RootLayout() {
+  const PRIVY_APP_ID = Constants.expoConfig?.extra?.PRIVY_APP_ID;
+  const PRIVY_CLIENT_ID = Constants.expoConfig?.extra?.PRIVY_CLIENT_ID;
+
   return (
     <PrivyProvider
-      appId="REDACTED"
-      clientId="REDACTED"
+      appId={env.PRIVY_APP_ID}
+      clientId={env.PRIVY_CLIENT_ID}
     >
       <PrivyElements />
       <AuthenticationGuard />

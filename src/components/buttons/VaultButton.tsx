@@ -1,4 +1,4 @@
-import { formatNumberWithCommas } from "@/src/assets/utils/numberToText";
+import { formatNumberWithCommas } from "@/src/utils/numberToText";
 import { View, Text, StyleSheet, Pressable, Image, ImageProps } from "react-native";
 import { colors } from "@/src/constants/Colors";
 import { fonts } from "@/src/constants/Fonts";

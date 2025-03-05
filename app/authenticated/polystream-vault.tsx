@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, ScrollView, Pressable } from "react-nati
 import { colors } from "@/src/constants/Colors";
 import { fonts } from "@/src/constants/Fonts";
 import { images } from "@/src/constants/Images";
-import { formatNumberWithCommas } from "@/src/assets/utils/numberToText";
+import { formatNumberWithCommas } from "@/src/utils/numberToText";
 import Pill from "@/src/components/Pill";
 
 export default function PolystreamVaultPage() {
