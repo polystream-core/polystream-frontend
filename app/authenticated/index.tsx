@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { formatNumberWithCommas } from "@/src/utils/numberToText";
+import { formatNumberWithCommas, resolveApyToString } from "@/src/utils/CustomFormatter";
 import ActionBar from "@/src/components/ActionBar";
 import VaultButton from "@/src/components/buttons/VaultButton";
 import TransakWidget from "@/src/components/transak/TransakWidget";
@@ -10,6 +10,7 @@ import { usePrivy } from "@privy-io/expo";
 import { router } from "expo-router";
 import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
 import SuccessPopup from "@/src/components/transak/SuccessPopup";
+import {useUserInfo} from "@/src/hooks/useUserInfo";
 
 const styles = StyleSheet.create({
   bg: {
@@ -76,6 +77,7 @@ function HomeScreen() {
   const { logout } = usePrivy();
   const [showTransak, setShowTransak] = useState(false);
   const [showTopUpSuccessPopup, setShowTopUpSuccessPopup] = useState(false);
+  const { totalBalance, accountBalance, accountStatus, accountApy, vaultBalance, vaultStatus, vaultApy } = useUserInfo();
 
   const handleTransakClose = () => {
     setShowTransak(false);
@@ -92,7 +94,7 @@ function HomeScreen() {
           />
           <Text style={styles.balanceCurrency}>USD </Text>
           <Text style={styles.balanceValue}>
-            {formatNumberWithCommas(90000)}
+            {formatNumberWithCommas(totalBalance)}
           </Text>
         </View>
         <Image
@@ -129,19 +131,19 @@ function HomeScreen() {
       >
         <VaultButton
           vaultName="Wallet"
-          balance={90000}
+          balance={accountBalance}
           currency="USD"
-          notes="+5.2% APY"
-          status="inactive"
+          notes={resolveApyToString(accountApy)}
+          status={accountStatus}
           imageSrc={images.eth_crystal_floating}
           onPress={() => console.log("Vault button pressed")}
         ></VaultButton>
         <VaultButton
           vaultName="Polystream Vault"
-          balance={82000}
+          balance={vaultBalance}
           currency="USD"
-          notes="+69.2% APY"
-          status="active"
+          notes={resolveApyToString(vaultApy)}
+          status={vaultStatus}
           imageSrc={images.scroll_media_4}
           onPress={() => {
             console.log("Vault button pressed");
