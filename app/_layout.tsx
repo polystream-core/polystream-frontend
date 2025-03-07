@@ -64,6 +64,13 @@ export default function RootLayout() {
     <PrivyProvider
       appId={env.PRIVY_APP_ID}
       clientId={env.PRIVY_CLIENT_ID}
+      config={{
+        embedded:{
+          ethereum: {
+            createOnLogin: 'all-users',
+          },
+        }
+      }}
     >
       <PrivyElements />
       <AuthenticationGuard />
