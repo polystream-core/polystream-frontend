@@ -5,7 +5,7 @@ import { colors } from "@/src/constants/Colors";
 import { fonts } from "@/src/constants/Fonts";
 import { images } from "@/src/constants/Images";
 
-type PillStatus = 'active' | 'pending' | 'inactive';
+export type PillStatus = 'active' | 'pending' | 'inactive';
 
 interface PillProps {
     status: PillStatus;

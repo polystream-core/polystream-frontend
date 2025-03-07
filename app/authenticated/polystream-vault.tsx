@@ -3,15 +3,15 @@ import { View, Text, StyleSheet, Image, ScrollView, Pressable } from "react-nati
 import { colors } from "@/src/constants/Colors";
 import { fonts } from "@/src/constants/Fonts";
 import { images } from "@/src/constants/Images";
-import { formatNumberWithCommas } from "@/src/utils/numberToText";
+import {formatNumberWithCommas, resolveApyToString} from "@/src/utils/CustomFormatter";
 import Pill from "@/src/components/Pill";
+import {useUserInfo} from "@/src/hooks/useUserInfo";
+import {useTransaction} from "@/src/hooks/useTransaction";
 
 export default function PolystreamVaultPage() {
-    // Sample data - in a real app, this would come from props or context
-    const vaultBalance = 82000;
+    const { vaultApy, vaultBalance, vaultStatus } = useUserInfo();
+    const { transferWalletToVault, transferVaultToWallet } = useTransaction();
     const vaultCurrency = "USD";
-    const vaultStatus = 'active';
-    const vaultAPY = '+69.2% APY';
 
     return (
         <View style={styles.container}>
@@ -22,7 +22,7 @@ export default function PolystreamVaultPage() {
                 <View style={styles.vaultCard}>
                     <View style={styles.cardHeader}>
                         <Pill status={vaultStatus} />
-                        <Text style={styles.apy}>{vaultAPY}</Text>
+                        <Text style={styles.apy}>{resolveApyToString(vaultApy)}</Text>
                     </View>
 
                     <View style={styles.balanceSection}>
@@ -40,12 +40,12 @@ export default function PolystreamVaultPage() {
                         <ActionButton
                             icon={images.add}
                             label="Deposit"
-                            onPress={() => console.log("Deposit pressed")}
+                            onPress={transferWalletToVault}
                         />
                         <ActionButton
                             icon={images.send}
                             label="Withdraw"
-                            onPress={() => console.log("Withdraw pressed")}
+                            onPress={transferVaultToWallet}
                         />
                     </View>
                 </View>

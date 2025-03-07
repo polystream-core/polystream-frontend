@@ -7,8 +7,8 @@ import {
   Animated, 
   Dimensions 
 } from "react-native";
-import { TransakWebView, Environments, Events } from "@transak/react-native-sdk";
-import { env } from '@/src/constants/AppConfig';
+import { TransakWebView, Events } from "@transak/react-native-sdk";
+import {transakConfig} from "@/src/configs/TransakConfig";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -56,21 +56,6 @@ const TransakWidget: React.FC<TransakWidgetProps> = ({
   // Animated value for sliding (initially offscreen at the bottom)
   const slideAnim = useRef(new Animated.Value(screenHeight)).current;
 
-  const transakConfig = {
-    apiKey: env.TRANSAK_API_KEY,
-    environment: Environments.STAGING,
-    partnerOrderId: "order-12345",
-    walletAddress: "0x567bDc4086eFc460811798d1075a21359E34072d",
-    fiatCurrency: "USD",
-    defaultCryptoCurrency: "USDC",
-    themeColor: "EBC28E", // beige
-    exchangeScreenTitle: "PolyStream - Top Up",
-    widgetHeight: "70%",
-    widgetWidth: "100%",
-    email: "",
-    ...configOverrides,
-  };
-
   // Centralized close handler which animates the widget down before hiding it
   const handleTransakClose = () => {
     Animated.timing(slideAnim, {
@@ -89,6 +74,7 @@ const TransakWidget: React.FC<TransakWidgetProps> = ({
       case Events.ORDER_CREATED:
       case Events.ORDER_PROCESSING:
       case Events.ORDER_COMPLETED:
+        // add transaction-related logic in useTransaction
         console.log(event, data);
         handleTransakClose();
         break;
@@ -130,7 +116,7 @@ const TransakWidget: React.FC<TransakWidgetProps> = ({
 
       {/* Transak WebView */}
       <TransakWebView
-        transakConfig={transakConfig}
+        transakConfig={transakConfig(configOverrides)}
         onTransakEvent={onTransakEventHandler}
       />
     </Animated.View>
