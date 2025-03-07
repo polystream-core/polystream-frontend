@@ -74,6 +74,7 @@ const TransakWidget: React.FC<TransakWidgetProps> = ({
       case Events.ORDER_CREATED:
       case Events.ORDER_PROCESSING:
       case Events.ORDER_COMPLETED:
+        // add transaction-related logic in useTransaction
         console.log(event, data);
         handleTransakClose();
         break;

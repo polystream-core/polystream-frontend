@@ -6,9 +6,11 @@ import { images } from "@/src/constants/Images";
 import {formatNumberWithCommas, resolveApyToString} from "@/src/utils/CustomFormatter";
 import Pill from "@/src/components/Pill";
 import {useUserInfo} from "@/src/hooks/useUserInfo";
+import {useTransaction} from "@/src/hooks/useTransaction";
 
 export default function PolystreamVaultPage() {
     const { vaultApy, vaultBalance, vaultStatus } = useUserInfo();
+    const { transferWalletToVault, transferVaultToWallet } = useTransaction();
     const vaultCurrency = "USD";
 
     return (
@@ -38,12 +40,12 @@ export default function PolystreamVaultPage() {
                         <ActionButton
                             icon={images.add}
                             label="Deposit"
-                            onPress={() => console.log("Deposit pressed")}
+                            onPress={transferWalletToVault}
                         />
                         <ActionButton
                             icon={images.send}
                             label="Withdraw"
-                            onPress={() => console.log("Withdraw pressed")}
+                            onPress={transferVaultToWallet}
                         />
                     </View>
                 </View>
