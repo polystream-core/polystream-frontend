@@ -1,16 +1,14 @@
 import { View, Text, StyleSheet, Pressable, Image } from "react-native";
-import { fonts } from "../src/constants/Fonts";
-import { colors } from "../src/constants/Colors";
+import { fonts } from "@/src/constants/Fonts";
+import { colors } from "@/src/constants/Colors";
 import CustomButton from "@/src/components/buttons/CustomButton";
 import Circle from "@/src/components/Circle";
-import { useLogin, useLoginWithEmail } from "@privy-io/expo";
+import { useLogin } from "@privy-io/expo";
 import { router } from "expo-router";
 import { useState } from "react";
 import Loading from "@/src/components/Loading";
-// import { PRIVY_APP_ID } from "@env";
 
 export default function SignInPage() {
-    const email: string = "yangdingcheok@gmail.com";
     const { login } = useLogin();
     const [loading, setLoading] = useState(false);
 

@@ -2,7 +2,7 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { Slot, useRouter } from "expo-router";
 import { useEffect, useState, useCallback } from 'react';
-import { loadFonts } from '../src/constants/Fonts';
+import { loadFonts } from '@/src/constants/Fonts';
 import { PrivyElements, PrivyProvider, usePrivy } from '@privy-io/expo';
 import SignInPage from './sign-in';
 import { View } from 'react-native';

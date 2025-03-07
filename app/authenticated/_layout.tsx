@@ -1,9 +1,6 @@
-import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { Redirect, Stack } from "expo-router";
-import { useEffect } from 'react';
-import { PrivyElements, PrivyProvider, usePrivy } from '@privy-io/expo';
-import Loading from '@/src/components/Loading';
+import { usePrivy } from '@privy-io/expo';
 
 SplashScreen.preventAutoHideAsync();
 
