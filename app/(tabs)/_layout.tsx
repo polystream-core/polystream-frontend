@@ -7,8 +7,8 @@ import {tabsIcons} from "@/src/constants/Images";
 export default function TabLayout() {
   const styles = StyleSheet.create({
     tabsIcons: {
-      height: 34,
-      width: 34,
+      height: 26,
+      width: 26,
       resizeMode: "contain"
     }
   });
