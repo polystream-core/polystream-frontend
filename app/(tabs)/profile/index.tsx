@@ -1,13 +1,13 @@
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Clipboard } from 'react-native';
-import { colors } from "@/src/constants/Colors";
-import { fonts } from "@/src/constants/Fonts";
-import { useUserInfo } from '@/src/hooks/useUserInfo';
-import { images } from "@/src/constants/Images";
-import React, { useState } from 'react';
+import {Clipboard, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {colors} from "@/src/constants/Colors";
+import {fonts} from "@/src/constants/Fonts";
+import {useUserInfo} from '@/src/hooks/useUserInfo';
+import {images} from "@/src/constants/Images";
+import React, {useState} from 'react';
 import Pill from '@/src/components/Pill';
 
 export default function Tab() {
-  const { name, username } = useUserInfo();
+  const {name, username} = useUserInfo();
   const walletAddress = '0x1234567890abcdef1234567890abcdef12345678';
   const email = 'example@gmail.com';
   const [copiedText, setCopiedText] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export default function Tab() {
             <Text style={styles.nameText}>{name}</Text>
             <Text style={styles.usernameText}>@{username}</Text>
             <View style={styles.pillWrapper}>
-              <Pill status='active' showIcon={true} />
+              <Pill status='active' showIcon={true}/>
             </View>
           </View>
         </View>
@@ -48,7 +48,7 @@ export default function Tab() {
           {/* Wallet Address */}
           <View style={styles.detailCard}>
             <View style={styles.detailHeader}>
-              <Image source={images.guarded} style={styles.detailIcon} resizeMode="contain" />
+              <Image source={images.guarded} style={styles.detailIcon} resizeMode="contain"/>
               <Text style={styles.detailLabelText}>Wallet Address</Text>
             </View>
             <View style={styles.detailContent}>
@@ -60,7 +60,7 @@ export default function Tab() {
                 {copiedText === 'wallet' ? (
                   <Text style={styles.copiedText}>Copied!</Text>
                 ) : (
-                  <Image source={images.copy} style={styles.copyIcon} resizeMode="contain" />
+                  <Image source={images.copy} style={styles.copyIcon} resizeMode="contain"/>
                 )}
               </TouchableOpacity>
             </View>
@@ -69,7 +69,7 @@ export default function Tab() {
           {/* Email */}
           <View style={styles.detailCard}>
             <View style={styles.detailHeader}>
-              <Image source={images.details} style={styles.detailIcon} resizeMode="contain" />
+              <Image source={images.details} style={styles.detailIcon} resizeMode="contain"/>
               <Text style={styles.detailLabelText}>Email</Text>
             </View>
             <View style={styles.detailContent}>
@@ -81,22 +81,20 @@ export default function Tab() {
                 {copiedText === 'email' ? (
                   <Text style={styles.copiedText}>Copied!</Text>
                 ) : (
-                  <Image source={images.copy} style={styles.copyIcon} resizeMode="contain" />
+                  <Image source={images.copy} style={styles.copyIcon} resizeMode="contain"/>
                 )}
               </TouchableOpacity>
             </View>
           </View>
         </View>
-
-        {/* Decorative Element */}
-        <View style={styles.decorativeElement}>
-          <Image
-            source={images.polystream_logo_bg}
-            style={styles.backgroundLogo}
-            resizeMode="contain"
-          />
-        </View>
       </ScrollView>
+      <View style={styles.decorativeElement}>
+        <Image
+          source={images.polystream_logo_trans}
+          style={styles.backgroundLogo}
+          resizeMode="contain"
+        />
+      </View>
     </View>
   );
 }
@@ -109,6 +107,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 40,
+    zIndex: 1
   },
   pageTitle: {
     fontFamily: fonts.primary.bold,
@@ -221,13 +220,20 @@ const styles = StyleSheet.create({
     color: colors.red.color01,
   },
   decorativeElement: {
-    alignItems: 'center',
+    position: 'absolute',
+    top: '50%',
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
-    marginTop: 20,
+    alignItems: 'center',
     opacity: 0.2,
+    zIndex: 0,
+    pointerEvents: 'none'
   },
   backgroundLogo: {
+    position: "absolute",
     width: 200,
-    height: 200,
+    height: 200
   }
 });
