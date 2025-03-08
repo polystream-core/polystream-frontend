@@ -22,7 +22,7 @@ export default function SignInPage() {
                     if (session) {
                         console.log("User logged in: ", session);
                         setLoading(false);
-                        router.push('/authenticated')
+                        router.push('/(tabs)')
                     } else {
                         setLoading(false);
                     }
