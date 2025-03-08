@@ -11,6 +11,13 @@ export const fonts = {
         regular: 'Trans Sans Regular',
         medium: 'Trans Sans Medium',
         bold: 'Trans Sans Bold'
+    },
+    code: {
+        light: 'MD IO Light',
+        regular: 'MD IO Regular',
+        medium: 'MD IO Medium',
+        semibold: 'MD IO SemiBold',
+        bold: 'MD IO Bold'
     }
 }
 
@@ -24,4 +31,9 @@ export const loadFonts = {
     [fonts.secondary.regular]: require('../assets/fonts/TransSans/trnss.ttf'),
     [fonts.secondary.medium]: require('../assets/fonts/TransSans/trnsm.ttf'),
     [fonts.secondary.bold]: require('../assets/fonts/TransSans/trnssb.ttf'),
+    [fonts.code.light]: require('../assets/fonts/MDIOTypeface/MDIO_Light.ttf'),
+    [fonts.code.regular]: require('../assets/fonts/MDIOTypeface/MDIO_Regular.ttf'),
+    [fonts.code.medium]: require('../assets/fonts/MDIOTypeface/MDIO_Medium.ttf'),
+    [fonts.code.semibold]: require('../assets/fonts/MDIOTypeface/MDIO_Semibold.ttf'),
+    [fonts.code.bold]: require('../assets/fonts/MDIOTypeface/MDIO_Bold.ttf')
 }
