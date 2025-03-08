@@ -8,10 +8,8 @@ import Pill from '@/src/components/Pill';
 import { usePrivy } from '@privy-io/expo';
 
 export default function Tab() {
-  const {name, username} = useUserInfo();
+  const {name, username, email, walletAddress} = useUserInfo();
   const { logout } = usePrivy();
-  const walletAddress = '0x1234567890abcdef1234567890abcdef12345678';
-  const email = 'example@gmail.com';
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [logoutExpanded, setLogoutExpanded] = useState(false);
   const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
