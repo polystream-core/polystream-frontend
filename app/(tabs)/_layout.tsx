@@ -1,23 +1,32 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Tabs } from 'expo-router';
-import { colors } from "@/src/constants/Colors";
-import { BlurView } from 'expo-blur';
-import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {Tabs} from 'expo-router';
+import {colors} from "@/src/constants/Colors";
+import {Image, StyleSheet} from 'react-native';
+import {tabsIcons} from "@/src/constants/Images";
 
 export default function TabLayout() {
+  const styles = StyleSheet.create({
+    tabsIcons: {
+      height: 34,
+      width: 34,
+      resizeMode: "contain"
+    }
+  });
+
   return (
-    <Tabs 
+    <Tabs
       initialRouteName="portfolio"
-      screenOptions={{ 
+      screenOptions={{
         tabBarActiveTintColor: colors.red.primary,
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: colors.beige.color03,
           borderTopWidth: 0,
           elevation: 0,
-          paddingVertical: 30
+          paddingHorizontal: 20,
+          paddingTop: 14
         }
       }}
     >
@@ -25,21 +34,21 @@ export default function TabLayout() {
         name="market"
         options={{
           title: 'Market',
-          tabBarIcon: ({ color }) => <FontAwesome size={24} name="line-chart" color={color} />,
+          tabBarIcon: ({focused}) => <Image source={focused ? tabsIcons.market_active : tabsIcons.market_inactive} style = {styles.tabsIcons}/>,
         }}
       />
       <Tabs.Screen
         name="portfolio"
         options={{
           title: 'Portfolio',
-          tabBarIcon: ({ color }) => <FontAwesome size={24} name="money" color={color} />,
+          tabBarIcon: ({focused}) => <Image source={focused ? tabsIcons.portfolio_active : tabsIcons.portfolio_inactive} style = {styles.tabsIcons}/>,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <FontAwesome size={24} name="user" color={color} />,
+          tabBarIcon: ({focused}) => <Image source={focused ? tabsIcons.profile_active : tabsIcons.profile_inactive} style = {styles.tabsIcons}/>,
         }}
       />
       <Tabs.Screen
@@ -53,12 +62,4 @@ export default function TabLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  blurView: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  }
-});
+
