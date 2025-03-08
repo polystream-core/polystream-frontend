@@ -3,14 +3,18 @@ import {colors} from "@/src/constants/Colors";
 import {fonts} from "@/src/constants/Fonts";
 import {useUserInfo} from '@/src/hooks/useUserInfo';
 import {images} from "@/src/constants/Images";
-import React, {useState} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import Pill from '@/src/components/Pill';
+import { usePrivy } from '@privy-io/expo';
 
 export default function Tab() {
   const {name, username} = useUserInfo();
+  const { logout } = usePrivy();
   const walletAddress = '0x1234567890abcdef1234567890abcdef12345678';
   const email = 'example@gmail.com';
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [logoutExpanded, setLogoutExpanded] = useState(false);
+  const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const copyToClipboard = (text: string, type: string) => {
     Clipboard.setString(text);
@@ -22,10 +26,57 @@ export default function Tab() {
     return `${address.substring(0, 12)}...${address.substring(address.length - 4)}`;
   };
 
+  const handleLogoutPress = () => {
+    if (logoutExpanded) {
+      // Second press - perform logout
+      logout();
+      setLogoutExpanded(false);
+      if (logoutTimeoutRef.current) {
+        clearTimeout(logoutTimeoutRef.current);
+        logoutTimeoutRef.current = null;
+      }
+    } else {
+      // First press - expand the button
+      setLogoutExpanded(true);
+
+      // Set timeout to collapse after 4 seconds
+      logoutTimeoutRef.current = setTimeout(() => {
+        setLogoutExpanded(false);
+      }, 4000);
+    }
+  };
+
+  // Clear timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (logoutTimeoutRef.current) {
+        clearTimeout(logoutTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.pageTitle}>Profile</Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.pageTitle}>Profile</Text>
+          <TouchableOpacity
+            style={[
+              styles.headerLogoutButton,
+              logoutExpanded ? styles.headerLogoutButtonExpanded : styles.headerLogoutButtonCollapsed
+            ]}
+            onPress={handleLogoutPress}
+          >
+            <Image
+              source={images.log_out}
+              style={styles.headerLogoutIcon}
+              resizeMode="contain"
+            />
+            {logoutExpanded && (
+              <Text style={styles.headerLogoutText}>Logout</Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
         {/* Profile Header */}
         <View style={styles.profileHeader}>
@@ -87,6 +138,8 @@ export default function Tab() {
             </View>
           </View>
         </View>
+
+        {/* Bottom logout button removed since we now have the dynamic one in the header */}
       </ScrollView>
       <View style={styles.decorativeElement}>
         <Image
@@ -109,12 +162,49 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     zIndex: 1
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 50,
+    marginBottom: 24,
+  },
   pageTitle: {
     fontFamily: fonts.primary.bold,
     fontSize: 28,
     color: colors.black.primary,
-    marginTop: 50,
-    marginBottom: 24,
+  },
+  headerLogoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.red.color03,
+    borderWidth: 1,
+    borderColor: colors.red.color01,
+    overflow: 'hidden',
+  },
+  headerLogoutButtonCollapsed: {
+    borderRadius: 24,
+    padding: 12,
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+  },
+  headerLogoutButtonExpanded: {
+    height: 48,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  headerLogoutIcon: {
+    width: 22,
+    height: 22,
+    tintColor: colors.red.primary,
+  },
+  headerLogoutText: {
+    fontFamily: fonts.secondary.medium,
+    fontSize: 14,
+    color: colors.red.primary,
+    padding: 4
   },
   profileHeader: {
     flexDirection: 'row',

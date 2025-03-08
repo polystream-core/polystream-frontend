@@ -74,7 +74,6 @@ const styles = StyleSheet.create({
 });
 
 function PortfolioScreen() {
-  const { logout } = usePrivy();
   const [showTransak, setShowTransak] = useState(false);
   const [showTopUpSuccessPopup, setShowTopUpSuccessPopup] = useState(false);
   const { totalBalance, accountBalance, accountStatus, accountApy, vaultBalance, vaultStatus, vaultApy } = useUserInfo();
@@ -120,7 +119,7 @@ function PortfolioScreen() {
               label: "Send",
               onPress: () => console.log("Send pressed"),
             },
-            { icon: images.log_out, label: "Log out", onPress: () => logout() },
+            { icon: images.details, label: "More", onPress: () => console.log('More pressed') },
           ]}
         />
       </View>
