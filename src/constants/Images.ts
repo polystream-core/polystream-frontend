@@ -14,5 +14,14 @@ export const images = {
     "tick": require("../assets/images/tick.png"),
     "pending": require("../assets/images/pending.png"),
     "cross": require("../assets/images/cross.png"),
-    "polystream_logo_bg": require("../assets/images/polystream_logo_bg.png")
+    "polystream_logo_bg": require("../assets/images/polystream_logo_bg.png"),
+}
+
+export const tabsIcons = {
+    "profile_active": require("../assets/images/tab_icons/profile_active.png"),
+    "profile_inactive": require("../assets/images/tab_icons/profile_inactive.png"),
+    "portfolio_active": require("../assets/images/tab_icons/portfolio_active.png"),
+    "portfolio_inactive": require("../assets/images/tab_icons/portfolio_inactive.png"),
+    "market_active": require("../assets/images/tab_icons/market_active.png"),
+    "market_inactive": require("../assets/images/tab_icons/market_inactive.png")
 }
