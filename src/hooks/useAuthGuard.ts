@@ -35,7 +35,7 @@ export function useAuthGuard() {
 
       // Navigate if user is authenticated
       if (user) {
-        router.push("/authenticated");
+        router.push("/(tabs)");
       }
     }
   }, [appIsReady, user, router]);
