@@ -10,6 +10,9 @@ export function useUserInfo() {
   const [vaultStatus, setVaultStatus] = useState<PillStatus>('active');
   const totalBalance = accountBalance + vaultBalance;
 
+  const [name, setName] = useState<string>('Chee Heng');
+  const [username, setUsername] = useState<string>('cheeheng10');
+
   // Add ./src/service/xx.ts to retrieve the user values from backend
 
   return {
@@ -25,6 +28,8 @@ export function useUserInfo() {
     setVaultApy,
     vaultStatus,
     setVaultStatus,
-    totalBalance
+    totalBalance,
+    name,
+    username
   }
 }
