@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
 });
 
-function HomeScreen() {
+function PortfolioScreen() {
   const { logout } = usePrivy();
   const [showTransak, setShowTransak] = useState(false);
   const [showTopUpSuccessPopup, setShowTopUpSuccessPopup] = useState(false);
@@ -147,7 +147,7 @@ function HomeScreen() {
           imageSrc={images.scroll_media_4}
           onPress={() => {
             console.log("Vault button pressed");
-            router.navigate("/authenticated/polystream-vault");
+            router.navigate("/portfolio/polystream-vault");
           }}
         ></VaultButton>
       </ScrollView>
@@ -167,4 +167,4 @@ function HomeScreen() {
   );
 }
 
-export default HomeScreen;
+export default PortfolioScreen;

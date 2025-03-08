@@ -4,7 +4,7 @@ import { usePrivy } from '@privy-io/expo';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+export default function Layout() {
 
     const {user} = usePrivy();
 
@@ -18,8 +18,6 @@ export default function RootLayout() {
             headerShown: false
           }}
           >
-            <Stack.Screen
-            name='polystream-vault' />
           </Stack>
     );
 }

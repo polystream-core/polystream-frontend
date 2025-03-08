@@ -1,5 +1,5 @@
 import * as SplashScreen from 'expo-splash-screen';
-import { Slot } from "expo-router";
+import { Slot, Stack } from "expo-router";
 import { PrivyElements, PrivyProvider } from '@privy-io/expo';
 import SignInPage from './sign-in';
 import { View } from 'react-native';
@@ -18,7 +18,11 @@ function AuthenticationGuard() {
 
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      {user ? <Slot /> : <SignInPage />}
+      {user ?
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+        : <SignInPage />}
     </View>
   );
 }
