@@ -62,8 +62,6 @@ export class EtherscanService {
    * @returns Promise with the balance as a string
    */
   async getAddressBalance(address: string): Promise<string> {
-    console.log(this.apiKey)
-    console.log(this.chainId)
     return this.makeRequest<string>({
       module: 'account',
       action: 'balance',
