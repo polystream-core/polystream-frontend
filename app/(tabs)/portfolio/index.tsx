@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { formatNumberWithCommas, resolveApyToString } from "@/src/utils/CustomFormatter";
 import ActionBar from "@/src/components/ActionBar";
 import VaultButton from "@/src/components/buttons/VaultButton";
@@ -8,9 +8,9 @@ import { fonts } from "@/src/constants/Fonts";
 import { images } from "@/src/constants/Images";
 import { usePrivy } from "@privy-io/expo";
 import { router } from "expo-router";
-import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Image, ScrollView, RefreshControl } from "react-native";
 import SuccessPopup from "@/src/components/transak/SuccessPopup";
-import {useUserInfo} from "@/src/hooks/useUserInfo";
+import { useUserInfo } from "@/src/hooks/useUserInfo";
 
 const styles = StyleSheet.create({
   bg: {
@@ -71,17 +71,35 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 30,
   },
+  refreshIndicator: {
+    backgroundColor: "transparent",
+  },
 });
 
 function PortfolioScreen() {
   const [showTransak, setShowTransak] = useState(false);
   const [showTopUpSuccessPopup, setShowTopUpSuccessPopup] = useState(false);
-  const { totalBalance, accountBalance, accountStatus, accountApy, vaultBalance, vaultStatus, vaultApy } = useUserInfo();
+  const [refreshing, setRefreshing] = useState(false);
+  const { totalBalance, accountBalance, accountStatus, accountApy, vaultBalance, vaultStatus, vaultApy, refreshUserInfo } = useUserInfo();
 
   const handleTransakClose = () => {
     setShowTransak(false);
     setShowTopUpSuccessPopup(true);
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await refreshUserInfo();
+      console.log("Data refreshed!");
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
   return (
     <View style={styles.bg}>
       <View style={styles.topContainer}>
@@ -127,6 +145,13 @@ function PortfolioScreen() {
       <ScrollView
         style={styles.scrollViewContainer}
         contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            style={styles.refreshIndicator}
+          />
+        }
       >
         <VaultButton
           vaultName="Wallet"
@@ -136,7 +161,7 @@ function PortfolioScreen() {
           status={accountStatus}
           imageSrc={images.eth_crystal_floating}
           onPress={() => console.log("Vault button pressed")}
-        ></VaultButton>
+        />
         <VaultButton
           vaultName="Polystream Vault"
           balance={vaultBalance}
@@ -148,7 +173,7 @@ function PortfolioScreen() {
             console.log("Vault button pressed");
             router.navigate("/portfolio/polystream-vault");
           }}
-        ></VaultButton>
+        />
       </ScrollView>
 
       {showTransak && (

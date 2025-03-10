@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { PillStatus } from "@/src/components/Pill";
 import { useEmbeddedEthereumWallet, usePrivy } from "@privy-io/expo";
 import { EtherscanService } from "@/src/services/etherscan";
+import {refresh} from "@react-native-community/netinfo";
 
 export function useUserInfo() {
   const etherscanService = new EtherscanService();
@@ -11,19 +12,23 @@ export function useUserInfo() {
   const [accountBalance, setAccountBalance] = useState<number>(12000);
   const [walletAddress, setWalletAddress] = useState<string>(wallets[0]?.address || 'error');
 
-  // Effect to update the balance when needed
-  useEffect(() => {
-    async function fetchBalance() {
-      if (walletAddress !== 'error') {
-        try {
-          const balance = await etherscanService.getAddressBalance(walletAddress);
-          setAccountBalance(+balance);
-        } catch (error) {
-          console.error("Error fetching balance:", error);
-        }
+  async function fetchBalance() {
+    if (walletAddress !== 'error') {
+      try {
+        const balance = await etherscanService.getAddressBalance(walletAddress);
+        setAccountBalance(+balance);
+      } catch (error) {
+        console.error("Error fetching balance:", error);
       }
     }
+  }
 
+  async function refreshUserInfo() {
+    await fetchBalance();
+  }
+
+  // Effect to update the balance when needed
+  useEffect(() => {
     fetchBalance();
   }, [walletAddress]);
 
@@ -62,6 +67,7 @@ export function useUserInfo() {
     name,
     username,
     email,
-    walletAddress
+    walletAddress,
+    refreshUserInfo
   }
 }
