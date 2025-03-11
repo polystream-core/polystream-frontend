@@ -5,63 +5,86 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Image,
+  ImageSourcePropType,
 } from "react-native";
 import { colors } from "@/src/constants/Colors";
 import { fonts } from "@/src/constants/Fonts";
 import { router } from "expo-router";
+import { images } from "@/src/constants/Images";
 
 export default function MarketScreen() {
+  const getCrystalImage = (risk: string): ImageSourcePropType => {
+    if (risk.toLowerCase().includes("low")) {
+      return images.green_crystal;
+    } else if (risk.toLowerCase().includes("medium")) {
+      return images.yellow_crystal;
+    } else if (risk.toLowerCase().includes("high")) {
+      return images.red_crystal;
+    }
+    return images.green_crystal;
+  };
+
+  interface Strategy {
+    id: number;
+    name: string;
+    apy: string;
+    risk: string;
+  }
+
+  const strategies: Strategy[] = [
+    { id: 1, name: "Strategy 1", apy: "5.00%", risk: "Medium Risk" },
+    { id: 2, name: "Strategy 2", apy: "7.25%", risk: "High Risk" },
+    { id: 3, name: "Strategy 3", apy: "3.50%", risk: "Low Risk" },
+  ];
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.pageTitle}>Market</Text>
 
-        {/* Market content will go here */}
-        <TouchableOpacity
-          style={styles.strategyCard}
-          onPress={() => router.navigate("/market/strategy-details")}
-        >
-          <View style={styles.cardContentRow}>
-            <View style={styles.coinImage}></View>
-            <View style={styles.cardContentColumn}>
-              <Text style={styles.strategyName}>Strategy 1</Text>
-              <Text style={styles.apyTitle}>Risk</Text>
+        {strategies.map((strategy, index) => (
+          <TouchableOpacity
+            key={strategy.id}
+            style={styles.strategyCard}
+            onPress={() =>
+              router.navigate({
+                pathname: "/market/strategy-details",
+                params: { name: strategy.name },
+              })
+            }
+          >
+            <View style={styles.cardContentRow}>
+              <View style={styles.coinImageContainer}>
+                <Image
+                  source={getCrystalImage(strategy.risk)}
+                  style={styles.coinImage}
+                  resizeMode="contain"
+                />
+              </View>
+              <View style={styles.cardContentColumn}>
+                <Text style={styles.strategyName}>{strategy.name}</Text>
+                <Text style={styles.riskInfo}>
+                  <Text style={styles.infoLabel}>Risk: </Text>
+                  <Text style={styles.infoValue}>{strategy.risk}</Text>
+                </Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.cardContentColumn}>
-            <Text style={styles.apyTitle}>Est. APY</Text>
-            <Text style={styles.apyText}>5.00%</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.strategyCard}>
-          <View style={styles.cardContentRow}>
-            <View style={styles.coinImage}></View>
             <View style={styles.cardContentColumn}>
-              <Text style={styles.strategyName}>Strategy 1</Text>
-              <Text style={styles.apyTitle}>Risk</Text>
+              <Text style={styles.apyTitle}>Est. APY</Text>
+              <Text style={styles.apyText}>{strategy.apy}</Text>
             </View>
-          </View>
-          <View style={styles.cardContentColumn}>
-            <Text style={styles.apyTitle}>Est. APY</Text>
-            <Text style={styles.apyText}>5.00%</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.strategyCard}>
-          <View style={styles.cardContentRow}>
-            <View style={styles.coinImage}></View>
-            <View style={styles.cardContentColumn}>
-              <Text style={styles.strategyName}>Strategy 1</Text>
-              <Text style={styles.apyTitle}>Risk</Text>
-            </View>
-          </View>
-          <View style={styles.cardContentColumn}>
-            <Text style={styles.apyTitle}>Est. APY</Text>
-            <Text style={styles.apyText}>5.00%</Text>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
+      
+      <View style={styles.decorativeElement}>
+        <Image
+          source={images.polystream_logo_trans}
+          style={styles.backgroundLogo}
+          resizeMode="contain"
+        />
+      </View>
     </View>
   );
 }
@@ -73,6 +96,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    zIndex: 1,
   },
   pageTitle: {
     fontFamily: fonts.primary.bold,
@@ -125,11 +149,44 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.grey.color01,
   },
-  coinImage: {
+  coinImageContainer: {
     width: 50,
     height: 50,
     borderRadius: 50,
-    backgroundColor: colors.beige.color01,
     marginRight: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
   },
+  coinImage: {
+    width: 40,
+    height: 40,
+  },
+  riskInfo: {
+    fontFamily: fonts.primary.medium,
+    fontSize: 13,
+  },
+  infoLabel: {
+    color: colors.grey.color01,
+  },
+  infoValue: {
+    color: colors.black.primary,
+  },
+  decorativeElement: {
+    position: 'absolute',
+    top: '50%',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.2,
+    zIndex: 0,
+    pointerEvents: 'none'
+  },
+  backgroundLogo: {
+    position: "absolute",
+    width: 200,
+    height: 200
+  }
 });
