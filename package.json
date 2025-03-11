@@ -17,6 +17,7 @@
   "dependencies": {
     "@ethersproject/shims": "^5.8.0",
     "@expo/vector-icons": "^14.0.2",
+    "@flaticon/flaticon-uicons": "^3.3.1",
     "@privy-io/expo": "^0.48.2",
     "@privy-io/expo-native-extensions": "^0.0.4",
     "@react-navigation/bottom-tabs": "^7.2.0",

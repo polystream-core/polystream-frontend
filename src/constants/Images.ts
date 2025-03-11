@@ -17,6 +17,10 @@ export const images = {
     "polystream_logo_bg": require("../assets/images/polystream_logo_bg.png"),
     "polystream_logo_trans": require("../assets/images/polystream_logo_trans.png"),
     "copy": require("../assets/images/copy.png"),
+    "green_crystal": require("../assets/images/green_crystal.png"),
+    "red_crystal": require("../assets/images/red_crystal.png"),
+    "yellow_crystal": require("../assets/images/yellow_crystal.png"),
+    "back_arrow": require("../assets/images/arrow-small-left.png"),
 }
 
 export const tabsIcons = {
