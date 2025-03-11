@@ -6,7 +6,7 @@ export const transakConfig = (configOverrides: Record<string, any> = {}): Transa
   apiKey: env.TRANSAK_API_KEY,
   environment: Environments.STAGING,
   partnerOrderId: "order-12345",
-  walletAddress: "0x567bDc4086eFc460811798d1075a21359E34072d",
+  walletAddress: "0x1375a0818014C96D1C0B723946c4835BFe4a32F5",
   fiatCurrency: "USD",
   defaultCryptoCurrency: "USDC",
   themeColor: colors.beige.primary,
