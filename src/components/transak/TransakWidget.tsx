@@ -8,19 +8,21 @@ import {
   SafeAreaView
 } from "react-native";
 import { TransakWebView, Events } from "@transak/react-native-sdk";
-import { transakConfig } from "@/src/configs/TransakConfig";
+import {createTransakConfig} from "@/src/configs/TransakConfig";
 import { colors } from "@/src/constants/Colors";
 import { fonts } from "@/src/constants/Fonts";
 
 interface TransakWidgetProps {
   visible: boolean;
   onClose?: () => void;
+  walletAddress: string;
   configOverrides?: Record<string, any>;
 }
 
 const TransakWidget: React.FC<TransakWidgetProps> = ({
   visible,
   onClose,
+  walletAddress,
   configOverrides = {},
 }) => {
   // Event handler for Transak events
@@ -55,7 +57,7 @@ const TransakWidget: React.FC<TransakWidgetProps> = ({
 
         <View style={styles.webViewContainer}>
           <TransakWebView
-            transakConfig={transakConfig(configOverrides)}
+            transakConfig={createTransakConfig(walletAddress, configOverrides)}
             onTransakEvent={onTransakEventHandler}
           />
         </View>

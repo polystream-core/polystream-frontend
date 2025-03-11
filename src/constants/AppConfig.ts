@@ -6,6 +6,7 @@ export const env = {
     PRIVY_CHAIN_ID: Constants.expoConfig?.extra?.PRIVY_CHAIN_ID,
     TRANSAK_API_KEY: Constants.expoConfig?.extra?.TRANSAK_API_KEY,
     ETHERSCAN_API_KEY: Constants.expoConfig?.extra?.ETHERSCAN_API_KEY,
+    ANVIL_HOST_IP: Constants.expoConfig?.extra?.ANVIL_HOST_IP,
 }
 
 export const appConfig = {
