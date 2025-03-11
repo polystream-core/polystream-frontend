@@ -43,7 +43,8 @@ export default {
             PRIVY_APP_ID: process.env.PRIVY_APP_ID,
             PRIVY_CLIENT_ID: process.env.PRIVY_CLIENT_ID,
             TRANSAK_API_KEY: process.env.TRANSAK_API_KEY,
-            ETHERSCAN_API_KEY: process.env.ETHERSCAN_API_KEY
+            ETHERSCAN_API_KEY: process.env.ETHERSCAN_API_KEY,
+            ANVIL_HOST_IP: process.env.ANVIL_HOST_IP,
         }
     }
 };

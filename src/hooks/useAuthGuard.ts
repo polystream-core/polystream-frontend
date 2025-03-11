@@ -35,6 +35,20 @@ export function useAuthGuard() {
 
       // Navigate if user is authenticated
       if (user) {
+        // TypeScript will now know user.linked_accounts is an array of LinkedAccount
+        if (user.linked_accounts.length > 0) {
+          // Loop through linked accounts and find the embedded wallet
+          console.log(user.linked_accounts.find(
+            (account) =>
+              account.type === "wallet" &&
+              account.wallet_client_type === "privy" &&
+              account.connector_type === "embedded"
+          ));
+        }
+        else {
+          console.log("No matching embedded wallet found.");
+        }
+
         router.push("/(tabs)");
       }
     }

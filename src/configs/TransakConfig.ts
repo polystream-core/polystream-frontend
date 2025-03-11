@@ -1,16 +1,20 @@
 import { env } from "@/src/constants/AppConfig";
 import { Environments, TransakConfig } from "@transak/react-native-sdk";
-import {colors} from "@/src/constants/Colors";
+import { colors } from "@/src/constants/Colors";
+import { uuidv7 } from "uuidv7";
 
-export const transakConfig = (configOverrides: Record<string, any> = {}): TransakConfig => ({
-  apiKey: env.TRANSAK_API_KEY,
-  environment: Environments.STAGING,
-  partnerOrderId: "order-12345",
-  walletAddress: "0x567bDc4086eFc460811798d1075a21359E34072d",
-  fiatCurrency: "USD",
-  defaultCryptoCurrency: "USDC",
-  themeColor: colors.beige.primary,
-  exchangeScreenTitle: "PolyStream - Top Up",
-  email: "",
-  ...configOverrides
-});
+export function createTransakConfig(walletAddress : string, configOverrides: Record<string, any> = {}): TransakConfig {
+  return {
+    apiKey: env.TRANSAK_API_KEY,
+    environment: Environments.STAGING,
+    partnerOrderId: uuidv7(), // Generate unique order ID using uuidv7
+    walletAddress: walletAddress,
+    fiatCurrency: "USD",
+    defaultCryptoCurrency: "USDC",
+    themeColor: colors.beige.color01,
+    exchangeScreenTitle: "PolyStream - Top Up",
+    // disableWalletAddressForm: true,
+    email: "",
+    ...configOverrides
+  };
+}

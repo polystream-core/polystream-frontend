@@ -80,7 +80,7 @@ function PortfolioScreen() {
   const [showTransak, setShowTransak] = useState(false);
   const [showTopUpSuccessPopup, setShowTopUpSuccessPopup] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const { totalBalance, accountBalance, accountStatus, accountApy, vaultBalance, vaultStatus, vaultApy, refreshUserInfo } = useUserInfo();
+  const { totalBalance, accountBalance, accountStatus, accountApy, vaultBalance, vaultStatus, vaultApy, refreshUserInfo, walletAddress } = useUserInfo();
 
   const handleTransakClose = () => {
     setShowTransak(false);
@@ -177,7 +177,7 @@ function PortfolioScreen() {
       </ScrollView>
 
       {showTransak && (
-        <TransakWidget visible={showTransak} onClose={handleTransakClose} />
+        <TransakWidget visible={showTransak} onClose={handleTransakClose} walletAddress={walletAddress} />
       )}
 
       {/* Render the SuccessPopup when showPopup is true */}
