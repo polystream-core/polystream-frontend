@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,8 +12,12 @@ import { colors } from "@/src/constants/Colors";
 import { fonts } from "@/src/constants/Fonts";
 import { router } from "expo-router";
 import { images } from "@/src/constants/Images";
+import ChatButton from "@/src/components/chat/ChatButton";
+import ChatModal from "@/src/components/chat/ChatModal";
 
 export default function MarketScreen() {
+  const [chatVisible, setChatVisible] = useState(false);
+
   const getCrystalImage = (risk: string): ImageSourcePropType => {
     if (risk.toLowerCase().includes("low")) {
       return images.green_crystal;
@@ -85,6 +89,15 @@ export default function MarketScreen() {
           resizeMode="contain"
         />
       </View>
+      
+      {/* Chat Button - Fixed position above tab bar */}
+      <ChatButton onPress={() => setChatVisible(true)} />
+      
+      {/* Chat Modal */}
+      <ChatModal 
+        visible={chatVisible} 
+        onClose={() => setChatVisible(false)} 
+      />
     </View>
   );
 }
@@ -97,6 +110,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     zIndex: 1,
+    paddingBottom: 120, // Add more padding at the bottom for the chat button
   },
   pageTitle: {
     fontFamily: fonts.primary.bold,
@@ -174,7 +188,7 @@ const styles = StyleSheet.create({
   },
   decorativeElement: {
     position: 'absolute',
-    top: '50%',
+    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
@@ -187,6 +201,7 @@ const styles = StyleSheet.create({
   backgroundLogo: {
     position: "absolute",
     width: 200,
-    height: 200
+    height: 200,
+    opacity: 0.4,
   }
 });

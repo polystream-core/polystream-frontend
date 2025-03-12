@@ -1,4 +1,4 @@
-import {Clipboard, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Clipboard, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {colors} from "@/src/constants/Colors";
 import {fonts} from "@/src/constants/Fonts";
 import {useUserInfo} from '@/src/hooks/useUserInfo';
@@ -58,7 +58,7 @@ export default function Tab() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerContainer}>
           <Text style={styles.pageTitle}>Profile</Text>
-          <TouchableOpacity
+          <Pressable
             style={[
               styles.headerLogoutButton,
               logoutExpanded ? styles.headerLogoutButtonExpanded : styles.headerLogoutButtonCollapsed
@@ -73,7 +73,7 @@ export default function Tab() {
             {logoutExpanded && (
               <Text style={styles.headerLogoutText}>Logout</Text>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Profile Header */}
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   },
   decorativeElement: {
     position: 'absolute',
-    top: '50%',
+    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
@@ -322,6 +322,7 @@ const styles = StyleSheet.create({
   backgroundLogo: {
     position: "absolute",
     width: 200,
-    height: 200
+    height: 200,
+    opacity: 0.4,
   }
 });
