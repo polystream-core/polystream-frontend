@@ -7,6 +7,7 @@ export const env = {
     TRANSAK_API_KEY: Constants.expoConfig?.extra?.TRANSAK_API_KEY,
     ETHERSCAN_API_KEY: Constants.expoConfig?.extra?.ETHERSCAN_API_KEY,
     ANVIL_HOST_IP: Constants.expoConfig?.extra?.ANVIL_HOST_IP,
+    OPENAI_API_KEY: Constants.expoConfig?.extra?.OPENAI_API_KEY,
 }
 
 export const appConfig = {
