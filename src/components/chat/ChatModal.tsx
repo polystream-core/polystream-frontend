@@ -18,17 +18,27 @@ import { images } from '@/src/constants/Images';
 import ChatBubble from './ChatBubble';
 import TypingIndicator from './TypingIndicator';
 import { useChat } from '@/src/hooks/useChat';
+import ConfirmationMessage from "@/src/components/chat/ConfirmationMessage";
 
 interface ChatModalProps {
   visible: boolean;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export default function ChatModal({ visible, onClose }: ChatModalProps) {
   const [message, setMessage] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
-  const { messages, isLoading, sendMessage, clearChat } = useChat();
-  
+  const {
+    messages,
+    isLoading,
+    sendMessage,
+    clearChat,
+    showConfirmation,
+    pendingTransaction,
+    handleConfirmTransaction,
+    handleCancelTransaction
+  } = useChat();
+
   // Scroll to bottom when messages change
   useEffect(() => {
     if (scrollViewRef.current && messages.length > 0) {
@@ -45,7 +55,7 @@ export default function ChatModal({ visible, onClose }: ChatModalProps) {
       Keyboard.dismiss();
     }
   };
-  
+
   // Filter out system message for display
   const displayMessages = messages.filter(msg => msg.role !== 'system');
 
@@ -73,8 +83,8 @@ export default function ChatModal({ visible, onClose }: ChatModalProps) {
                 <Image source={images.cross} style={styles.icon} />
               </TouchableOpacity>
             </View>
-            
-            <ScrollView 
+
+            <ScrollView
               ref={scrollViewRef}
               style={styles.messagesContainer}
               contentContainerStyle={styles.messagesContent}
@@ -83,8 +93,8 @@ export default function ChatModal({ visible, onClose }: ChatModalProps) {
               {/* Welcome message */}
               {displayMessages.length === 0 && (
                 <View style={styles.welcomeContainer}>
-                  <Image 
-                    source={images.polystream_logo_trans} 
+                  <Image
+                    source={images.polystream_logo_trans}
                     style={styles.welcomeImage}
                     resizeMode="contain"
                   />
@@ -96,20 +106,33 @@ export default function ChatModal({ visible, onClose }: ChatModalProps) {
                   </Text>
                 </View>
               )}
-              
+
               {/* Message bubbles */}
               {displayMessages.map((msg, index) => (
-                <ChatBubble 
-                  key={`msg-${msg.id || index}`}
-                  content={msg.content}
-                  isUser={msg.role === 'user'}
-                />
+                msg.isConfirmation && msg.confirmationData ? (
+                  <ConfirmationMessage
+                    key={`msg-${msg.id || index}`}
+                    riskLevel={msg.confirmationData.riskLevel}
+                    amount={msg.confirmationData.amount}
+                    onConfirm={handleConfirmTransaction}
+                    onCancel={handleCancelTransaction}
+                  />
+                ) : (
+                  msg.content ? 
+                  <ChatBubble
+                    key={`msg-${msg.id || index}`}
+                    content={msg.content}
+                    isUser={msg.role === 'user'}
+                  />
+                  :
+                  <></>
+                )
               ))}
-              
+
               {/* Typing indicator */}
               {isLoading && <TypingIndicator />}
             </ScrollView>
-            
+
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}

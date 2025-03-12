@@ -1,8 +1,40 @@
 import { env } from "@/src/constants/AppConfig";
 
 interface Message {
-  role: "system" | "user" | "assistant";
+  role: "system" | "user" | "assistant" | "function" | "tool";
   content: string;
+  name?: string;
+  tool_call_id?: string;
+  tool_calls?: ToolCall[]; 
+
+}
+
+export interface FunctionParameter {
+  type: string;
+  properties: Record<string, any>;
+  required?: string[];
+  additionalProperties: boolean;
+}
+
+export interface FunctionDefinition {
+  name: string;
+  description: string;
+  parameters: FunctionParameter;
+  strict?: boolean;
+}
+
+export interface Tool {
+  type: "function";
+  function: FunctionDefinition;
+}
+
+interface ToolCall {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string;
+  };
 }
 
 interface ChatCompletionRequest {
@@ -10,6 +42,8 @@ interface ChatCompletionRequest {
   messages: Message[];
   temperature?: number;
   max_tokens?: number;
+  tools?: Tool[];
+  tool_choice?: "auto" | "none" | { type: string; function: { name: string } };
 }
 
 interface ChatCompletionResponse {
@@ -19,7 +53,11 @@ interface ChatCompletionResponse {
   model: string;
   choices: {
     index: number;
-    message: Message;
+    message: {
+      role: string;
+      content: string | null;
+      tool_calls?: ToolCall[];
+    };
     finish_reason: string;
   }[];
   usage: {
@@ -44,11 +82,15 @@ export class OpenAIService {
    * Generate a completion from a conversation with ChatGPT
    * @param messages The array of conversation messages
    * @param model The model to use, defaults to "gpt-4o"
+   * @param tools Optional array of tools (functions) that the model can call
+   * @param toolChoice Optional parameter to control tool selection behavior
    * @returns Promise with the API response
    */
   async generateChatCompletion(
     messages: Message[],
-    model: string = "gpt-4o"
+    model = "gpt-4o",
+    tools?: Tool[],
+    toolChoice?: "auto" | "none" | { type: string; function: { name: string } }
   ): Promise<Message> {
     try {
       const request: ChatCompletionRequest = {
@@ -56,6 +98,16 @@ export class OpenAIService {
         messages,
         temperature: 0.7,
       };
+
+      // Add tools if provided
+      if (tools && tools.length > 0) {
+        request.tools = tools;
+      }
+
+      // Add tool_choice if provided
+      if (toolChoice) {
+        request.tool_choice = toolChoice;
+      }
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: "POST",
@@ -74,12 +126,19 @@ export class OpenAIService {
       }
 
       const data: ChatCompletionResponse = await response.json();
-      return data.choices[0].message;
+      const responseMessage = data.choices[0].message;
+
+      // Convert response to Message format
+      return {
+        role: responseMessage.role as "assistant",
+        content: responseMessage.content || "",
+        ...(responseMessage.tool_calls && { tool_calls: responseMessage.tool_calls }),
+      };
     } catch (error) {
       console.error("Error calling OpenAI API:", error);
-      return { 
-        role: "assistant", 
-        content: "Sorry, I couldn't process your request due to an error." 
+      return {
+        role: "assistant",
+        content: "Sorry, I couldn't process your request due to an error."
       };
     }
   }
