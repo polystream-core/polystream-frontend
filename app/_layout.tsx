@@ -2,12 +2,15 @@ import * as SplashScreen from 'expo-splash-screen';
 import { Slot, Stack } from "expo-router";
 import { PrivyElements, PrivyProvider } from '@privy-io/expo';
 import SignInPage from './sign-in';
-import { View } from 'react-native';
+import {LogBox, View} from 'react-native';
 import { env } from '@/src/constants/AppConfig';
 import { useAuthGuard } from '@/src/hooks/useAuthGuard';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
+
+// to ignore all logs for presentation
+// LogBox.ignoreAllLogs(true)
 
 function AuthenticationGuard() {
   const { user, appIsReady, onLayoutRootView } = useAuthGuard();
