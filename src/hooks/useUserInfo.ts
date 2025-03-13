@@ -11,16 +11,15 @@ export function useUserInfo() {
   const { wallets } = useEmbeddedEthereumWallet();
   const { user } = usePrivy();
 
-  const [accountBalance, setAccountBalance] = useState<number>(12000);
+  const [accountBalance, setAccountBalance] = useState<number>(0);
   const [walletAddress, setWalletAddress] = useState<string>(
     wallets[0]?.address || "error"
   );
 
-  console.log("Anvil Config:", anvilConfig);
   const provider = new JsonRpcProvider(anvilConfig.ANVIL_HOST_IP, { chainId: 6666, name: "anvil" });
 
   // fetch balance from anvil forked Scroll chain instead of ethereum mainnet
-  async function fetchBalance() {
+  async function fetchAccountBalance() {
     if (walletAddress !== "error") {
       try {
         // Create an instance of the USDC contract using ethers v6 style
@@ -32,27 +31,23 @@ export function useUserInfo() {
         setAccountBalance(+newBalance);
       } catch (error) {
         console.error("Error fetching balance:", error);
+        setAccountBalance(12000);
       }
     }
   }
 
   async function refreshUserInfo() {
-    await fetchBalance();
+    await fetchAccountBalance();
   }
 
   // Effect to update the balance when needed
   useEffect(() => {
-    fetchBalance();
+    fetchAccountBalance();
   }, [walletAddress]);
-
-  async function getBalance(address: string): Promise<number> {
-    const balance = await etherscanService.getAddressBalance(address);
-    return +balance;
-  }
 
   const [accountApy, setAccountApy] = useState<number>(-0.03);
   const [accountStatus, setAccountStatus] = useState<PillStatus>("active");
-  const [vaultBalance, setVaultBalance] = useState<number>(40000);
+  const [vaultBalance, setVaultBalance] = useState<number>(0);
   const [vaultApy, setVaultApy] = useState<number>(69.2);
   const [vaultStatus, setVaultStatus] = useState<PillStatus>("active");
   const totalBalance = accountBalance + vaultBalance;
