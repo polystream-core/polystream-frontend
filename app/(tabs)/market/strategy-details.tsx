@@ -24,17 +24,22 @@ export default function StrategyDetails() {
     name = "Strategy Details",
     apy = "5.00%",
     risk = "Medium Risk",
+    poolSize: poolSizeStr = "1250000",
+    description = "This strategy optimizes yield by allocating funds across multiple DeFi protocols.",
+    imageKey = "yellow_crystal"
   } = useLocalSearchParams();
 
   const [stakeAmount, setStakeAmount] = useState("");
 
-  // Mock data - in a real app, this would come from your backend
-  const poolSize = 1250000;
+  // Convert poolSize from string to number
+  const poolSize = parseInt(poolSizeStr as string, 10) || 1250000;
+
+  // Calculate daily yield
   const dailyYield = stakeAmount
     ? (
-        (parseFloat(stakeAmount) * (parseFloat(apy as string) / 100)) /
-        365
-      ).toFixed(2)
+      (parseFloat(stakeAmount) * (parseFloat(apy as string) / 100)) /
+      365
+    ).toFixed(2)
     : "0.00";
 
   const handleStake = () => {
@@ -64,8 +69,8 @@ export default function StrategyDetails() {
           </TouchableOpacity>
           <Text style={styles.pageTitle}>{name}</Text>
         </View>
-        
-        <ScrollView 
+
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
@@ -74,13 +79,7 @@ export default function StrategyDetails() {
             <View style={styles.cardHeader}>
               <View style={styles.crystalContainer}>
                 <Image
-                  source={
-                    (risk as string).toLowerCase().includes("low")
-                      ? images.green_crystal
-                      : (risk as string).toLowerCase().includes("medium")
-                      ? images.yellow_crystal
-                      : images.red_crystal
-                  }
+                  source={images[imageKey as keyof typeof images] || images.yellow_crystal}
                   style={styles.crystalImage}
                   resizeMode="contain"
                 />
@@ -110,10 +109,7 @@ export default function StrategyDetails() {
             {/* Description */}
             <Text style={styles.descriptionTitle}>Strategy Description</Text>
             <Text style={styles.descriptionText}>
-              This strategy optimizes yield by allocating funds across multiple
-              DeFi protocols, balancing risk and reward to achieve consistent
-              returns. The portfolio is rebalanced regularly to adapt to changing
-              market conditions.
+              {description}
             </Text>
           </View>
 

@@ -34,12 +34,39 @@ export default function MarketScreen() {
     name: string;
     apy: string;
     risk: string;
+    poolSize: number;
+    description: string;
+    imageKey: "green_crystal" | "yellow_crystal" | "red_crystal";
   }
 
   const strategies: Strategy[] = [
-    { id: 1, name: "Strategy 1", apy: "5.00%", risk: "Medium Risk" },
-    { id: 2, name: "Strategy 2", apy: "7.25%", risk: "High Risk" },
-    { id: 3, name: "Strategy 3", apy: "3.50%", risk: "Low Risk" },
+    {
+      id: 1,
+      name: "Conservative Yield",
+      apy: "3.50%",
+      risk: "Low Risk",
+      poolSize: 2500000,
+      description: "This low-risk strategy focuses on stable yields through diversified lending protocols and blue-chip liquid staking derivatives. Perfect for those seeking capital preservation with modest returns.",
+      imageKey: "green_crystal"
+    },
+    {
+      id: 2,
+      name: "Balanced Growth",
+      apy: "5.75%",
+      risk: "Medium Risk",
+      poolSize: 1250000,
+      description: "A balanced approach allocating capital across multiple DeFi protocols with moderate risk exposure. This strategy optimizes for consistent returns while adapting to changing market conditions.",
+      imageKey: "yellow_crystal"
+    },
+    {
+      id: 3,
+      name: "Alpha Seeker",
+      apy: "8.25%",
+      risk: "High Risk",
+      poolSize: 750000,
+      description: "Our highest yield strategy leveraging advanced DeFi techniques including strategic position management and yield farming across emerging protocols with higher risk profiles for maximum returns.",
+      imageKey: "red_crystal"
+    },
   ];
 
   return (
@@ -47,21 +74,28 @@ export default function MarketScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.pageTitle}>Market</Text>
 
-        {strategies.map((strategy, index) => (
+        {strategies.map((strategy) => (
           <TouchableOpacity
             key={strategy.id}
             style={styles.strategyCard}
             onPress={() =>
               router.navigate({
                 pathname: "/market/strategy-details",
-                params: { name: strategy.name },
+                params: {
+                  name: strategy.name,
+                  apy: strategy.apy,
+                  risk: strategy.risk,
+                  poolSize: strategy.poolSize.toString(),
+                  description: strategy.description,
+                  imageKey: strategy.imageKey
+                },
               })
             }
           >
             <View style={styles.cardContentRow}>
               <View style={styles.coinImageContainer}>
                 <Image
-                  source={getCrystalImage(strategy.risk)}
+                  source={images[strategy.imageKey]}
                   style={styles.coinImage}
                   resizeMode="contain"
                 />
@@ -74,6 +108,7 @@ export default function MarketScreen() {
                 </Text>
               </View>
             </View>
+
             <View style={styles.cardContentColumn}>
               <Text style={styles.apyTitle}>Est. APY</Text>
               <Text style={styles.apyText}>{strategy.apy}</Text>
@@ -81,7 +116,7 @@ export default function MarketScreen() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-      
+
       <View style={styles.decorativeElement}>
         <Image
           source={images.polystream_logo_trans}
@@ -89,14 +124,14 @@ export default function MarketScreen() {
           resizeMode="contain"
         />
       </View>
-      
+
       {/* Chat Button - Fixed position above tab bar */}
       <ChatButton onPress={() => setChatVisible(true)} />
-      
+
       {/* Chat Modal */}
-      <ChatModal 
-        visible={chatVisible} 
-        onClose={() => setChatVisible(false)} 
+      <ChatModal
+        visible={chatVisible}
+        onClose={() => setChatVisible(false)}
       />
     </View>
   );
