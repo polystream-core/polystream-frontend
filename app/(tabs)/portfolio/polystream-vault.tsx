@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -24,7 +24,7 @@ import { useTransaction } from "@/src/hooks/useTransaction";
 import { router } from "expo-router";
 
 export default function PolystreamVaultPage() {
-  const { vaultApy, vaultBalance, vaultStatus } = useUserInfo();
+  const { vaultApy, accountBalance, vaultBalance, vaultStatus } = useUserInfo();
   const { transferWalletToVault, transferVaultToWallet } = useTransaction();
   const vaultCurrency = "USD";
 
@@ -45,8 +45,8 @@ export default function PolystreamVaultPage() {
           </TouchableOpacity>
           <Text style={styles.pageTitle}>Polystream Vault</Text>
         </View>
-        
-        <ScrollView 
+
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
@@ -74,12 +74,12 @@ export default function PolystreamVaultPage() {
               <ActionButton
                 icon={images.add}
                 label="Deposit"
-                onPress={transferWalletToVault}
+                onPress={() => transferWalletToVault(100)}
               />
               <ActionButton
                 icon={images.send}
                 label="Withdraw"
-                onPress={transferVaultToWallet}
+                onPress={() => transferVaultToWallet(10)}
               />
             </View>
           </View>
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   stickyHeader: {
     flexDirection: "row",
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.beige.color03,
     zIndex: 10,
-    position: 'relative',
+    position: "relative",
   },
   scrollContent: {
     padding: 20,
