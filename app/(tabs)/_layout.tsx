@@ -1,5 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import {Tabs} from 'expo-router';
+import {Tabs, useSegments} from 'expo-router';
 import {colors} from "@/src/constants/Colors";
 import {Image, StyleSheet} from 'react-native';
 import {tabsIcons} from "@/src/constants/Images";
@@ -12,6 +12,12 @@ export default function TabLayout() {
       resizeMode: "contain"
     }
   });
+
+  const segment = useSegments();
+  // get the current page from the segment
+  const page = segment[segment.length - 1]
+  // create an array of list pages you want to hide the tab bar in
+  const pagesToHide = ['strategy-details', 'polystream-vault']
 
   return (
     <Tabs
@@ -26,7 +32,8 @@ export default function TabLayout() {
           borderTopWidth: 0,
           elevation: 0,
           paddingHorizontal: 20,
-          paddingVertical: 200
+          paddingVertical: 200,
+          display: pagesToHide.includes(page) ? 'none' : 'flex'
         }
       }}
     >
