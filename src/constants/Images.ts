@@ -22,6 +22,9 @@ export const images = {
     "yellow_crystal": require("../assets/images/yellow_crystal.png"),
     "back_arrow": require("../assets/images/arrow-small-left.png"),
     "bin": require("../assets/images/bin.png"),
+    "angle_down": require("../assets/images/angle-small-down.png"),
+    "angle_up": require("../assets/images/angle-small-up.png"),
+    "withdraw": require("../assets/images/withdraw.png"),
 }
 
 export const tabsIcons = {

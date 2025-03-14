@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   statValueHighlight: {
     fontFamily: fonts.primary.bold,
     fontSize: 18,
-    color: "#00C853",
+    color: colors.green.primary,
   },
   separator: {
     height: 1,

@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Image,
   ScrollView,
-  Pressable,
   TouchableOpacity,
   StatusBar,
   Platform,
@@ -20,13 +19,69 @@ import {
 } from "@/src/utils/CustomFormatter";
 import Pill from "@/src/components/Pill";
 import { useUserInfo } from "@/src/hooks/useUserInfo";
-import { useTransaction } from "@/src/hooks/useTransaction";
 import { router } from "expo-router";
+import WithdrawModal from "@/src/components/modals/WithdrawModal";
 
 export default function PolystreamVaultPage() {
-  const { vaultApy, accountBalance, vaultBalance, vaultStatus } = useUserInfo();
-  const { transferWalletToVault, transferVaultToWallet } = useTransaction();
+  const { vaultApy, vaultBalance, vaultStatus } = useUserInfo();
   const vaultCurrency = "USD";
+  const [showStats, setShowStats] = useState(false);
+  // State for withdrawal modal
+  const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
+  const [selectedVault, setSelectedVault] = useState<null | {
+    id: number;
+    name: string;
+    balance: number;
+    imageKey: string;
+  }>(null);
+
+  // Mock data for individual vaults
+  const individualVaults = [
+    {
+      id: 1,
+      name: "Conservative Yield Vault",
+      balance: 2500,
+      apy: "3.50%",
+      risk: "Low Risk",
+      imageKey: "green_crystal",
+    },
+    {
+      id: 2,
+      name: "Balanced Growth Vault",
+      balance: 5000,
+      apy: "5.75%",
+      risk: "Medium Risk",
+      imageKey: "yellow_crystal",
+    },
+    {
+      id: 3,
+      name: "Alpha Seeker Vault",
+      balance: 2500,
+      apy: "8.25%",
+      risk: "High Risk",
+      imageKey: "red_crystal",
+    },
+  ];
+
+  const handleWithdrawPress = (vault: {
+    id: number;
+    name: string;
+    balance: number;
+    imageKey: string;
+  }) => {
+    setSelectedVault(vault);
+    setWithdrawModalVisible(true);
+  };
+
+  const handleWithdrawConfirm = (amount: number) => {
+    if (!selectedVault) return;
+
+    // Handle withdrawal logic here
+    console.log(`Withdrawing ${amount} from ${selectedVault.name}`);
+
+    // Close the modal
+    setWithdrawModalVisible(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -50,15 +105,21 @@ export default function PolystreamVaultPage() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Vault Card */}
+          {/* Main Vault Card */}
           <View style={styles.vaultCard}>
+            {/* Card content remains the same */}
             <View style={styles.cardHeader}>
               <Pill status={vaultStatus} />
-              <Text style={styles.apy}>{resolveApyToString(vaultApy)}</Text>
+              <View style={styles.overallApyContainer}>
+                <Text style={styles.overallApyLabel}>Overall APY</Text>
+                <Text style={styles.apy}>
+                  {resolveApyToString(vaultApy).split(" ")[0]}
+                </Text>{" "}
+              </View>
             </View>
 
             <View style={styles.balanceSection}>
-              <Text style={styles.balanceLabel}>Current Balance</Text>
+              <Text style={styles.balanceLabel}>Total Balance</Text>
               <View style={styles.balanceRow}>
                 <Text style={styles.balanceValue}>
                   {formatNumberWithCommas(vaultBalance)}
@@ -67,66 +128,143 @@ export default function PolystreamVaultPage() {
               </View>
             </View>
 
-            <View style={styles.separator} />
+            {/* Dropdown toggle - just the arrow centered */}
+            {!showStats && (
+              <TouchableOpacity
+                style={styles.toggleArrowContainer}
+                onPress={() => setShowStats(true)}
+                activeOpacity={0.6}
+              >
+                <Image
+                  source={images.angle_down}
+                  style={styles.toggleStatsIcon}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            )}
 
-            {/* Action Bar */}
-            <View style={styles.actionBar}>
-              <ActionButton
-                icon={images.add}
-                label="Deposit"
-                onPress={() => transferWalletToVault(100)}
-              />
-              <ActionButton
-                icon={images.send}
-                label="Withdraw"
-                onPress={() => transferVaultToWallet(10)}
-              />
-            </View>
+            {/* Dropdown statistics section */}
+            {showStats && (
+              <View style={styles.dropdown}>
+                <View style={styles.statsGrid}>
+                  <View style={styles.statColumn}>
+                    <Text style={styles.statGridLabel}>Total Value Locked</Text>
+                    <View style={styles.statValueRow}>
+                      <Text style={styles.statGridValue}>82,000</Text>
+                      <Text style={styles.statCurrency}>{vaultCurrency}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.statColumn}>
+                    <Text style={styles.statGridLabel}>Est. Monthly Yield</Text>
+                    <View style={styles.statValueRow}>
+                      <Text style={styles.statGridValue}>4,712</Text>
+                      <Text style={styles.statCurrency}>{vaultCurrency}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.statsGrid}>
+                  <View style={styles.statColumn}>
+                    <Text style={styles.statGridLabel}>
+                      Number of Strategies
+                    </Text>
+                    <Text style={styles.statGridValue}>3</Text>
+                  </View>
+                  <View style={styles.statColumn}>
+                    <Text style={styles.statGridLabel}>Time Lock</Text>
+                    <Text style={styles.statGridValue}>30 days</Text>
+                  </View>
+                </View>
+
+                {/* Up arrow at the bottom of the dropdown */}
+                <TouchableOpacity
+                  style={styles.closeArrowContainer}
+                  onPress={() => setShowStats(false)}
+                  activeOpacity={0.6}
+                >
+                  <Image
+                    source={images.angle_up}
+                    style={styles.toggleStatsIcon}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
-          {/* Additional content can go here */}
-          <View style={styles.statsContainer}>
-            <Text style={styles.sectionTitle}>Vault Statistics</Text>
-            <StatRow label="Total Assets" value="$82,000 USD" />
-            <StatRow label="Estimated Earnings" value="$4,712 USD" />
-            <StatRow label="Strategy" value="USDC Yield Farming" />
-            <StatRow label="Time Lock" value="30 days" />
+          {/* Individual Vaults Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Your Vault Positions</Text>
+
+            {individualVaults.map((vault) => (
+              <View key={vault.id} style={styles.vaultItemCard}>
+                <View style={styles.vaultItemHeader}>
+                  <View style={styles.vaultItemLeft}>
+                    <View style={styles.crystalContainer}>
+                      <Image
+                        source={images[vault.imageKey as keyof typeof images]}
+                        style={styles.crystalImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.vaultItemName}>{vault.name}</Text>
+                      <Text style={styles.vaultItemRisk}>{vault.risk}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.vaultItemDetails}>
+                  <View style={styles.vaultItemDetail}>
+                    <Text style={styles.detailLabel}>Balance</Text>
+                    <View style={styles.vaultItemBalanceRow}>
+                      <Text style={styles.vaultItemBalanceValue}>
+                        {formatNumberWithCommas(vault.balance)}
+                      </Text>
+                      <Text style={styles.vaultItemBalanceCurrency}>
+                        {vaultCurrency}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.vaultItemDetail}>
+                    <Text style={styles.detailLabel}>APY</Text>
+                    <Text style={[styles.detailValue, styles.apyValue]}>
+                      {vault.apy}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.withdrawButton}
+                    onPress={() => handleWithdrawPress(vault)}
+                  >
+                    <Image
+                      source={images.withdraw}
+                      style={styles.withdrawIcon}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
           </View>
         </ScrollView>
+
+        {/* Using the WithdrawModal component */}
+        <WithdrawModal
+          visible={withdrawModalVisible}
+          onClose={() => setWithdrawModalVisible(false)}
+          onConfirm={handleWithdrawConfirm}
+          vaultInfo={selectedVault}
+          vaultCurrency={vaultCurrency}
+        />
       </SafeAreaView>
     </View>
   );
 }
 
-// Helper component for action buttons
-function ActionButton({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: any;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable style={styles.actionButton} onPress={onPress}>
-      <Image source={icon} style={styles.actionIcon} resizeMode="contain" />
-      <Text style={styles.actionLabel}>{label}</Text>
-    </Pressable>
-  );
-}
-
-// Helper component for stat rows
-function StatRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.statRow}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
+  // Keep all existing styles except for the modal-related ones
   container: {
     flex: 1,
     backgroundColor: colors.beige.color03,
@@ -174,17 +312,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+    marginBottom: 24,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 8,
+  },
+  overallApyContainer: {
+    alignItems: "flex-start",
+  },
+  overallApyLabel: {
+    fontFamily: fonts.secondary.regular,
+    fontSize: 12,
+    color: colors.grey.color01,
+    marginBottom: 4,
   },
   apy: {
     fontFamily: fonts.secondary.bold,
     fontSize: 16,
-    color: colors.red.primary,
+    color: colors.green.primary,
   },
   balanceSection: {
     marginVertical: 16,
@@ -193,7 +341,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.secondary.regular,
     fontSize: 16,
     color: colors.black.color02,
-    marginBottom: 8,
   },
   balanceRow: {
     flexDirection: "row",
@@ -210,41 +357,109 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: colors.black.color02,
   },
-  separator: {
-    height: 1,
-    backgroundColor: colors.grey.color03,
-    marginVertical: 20,
-  },
-  actionBar: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-  },
-  actionButton: {
+  toggleArrowContainer: {
     alignItems: "center",
-    padding: 8,
+    justifyContent: "center",
   },
-  actionIcon: {
-    width: 30,
-    height: 30,
-    marginBottom: 8,
+  toggleStatsIcon: {
+    width: 24,
+    height: 24,
+    tintColor: colors.grey.color01,
   },
-  actionLabel: {
-    fontFamily: fonts.primary.medium,
-    fontSize: 16,
-    color: colors.black.primary,
+  dropdown: {
+    marginTop: 16,
   },
-  statsContainer: {
-    marginTop: 32,
-    backgroundColor: colors.grey.white,
-    borderRadius: 16,
-    padding: 24,
+  closeArrowContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionContainer: {
+    marginBottom: 24,
   },
   sectionTitle: {
     fontFamily: fonts.primary.semibold,
     fontSize: 20,
     color: colors.black.primary,
     marginBottom: 16,
+  },
+  vaultItemCard: {
+    backgroundColor: colors.grey.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: colors.black.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  vaultItemHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  vaultItemLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  crystalContainer: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  crystalImage: {
+    width: 32,
+    height: 32,
+  },
+  vaultItemName: {
+    fontFamily: fonts.primary.semibold,
+    fontSize: 16,
+    color: colors.black.primary,
+  },
+  vaultItemRisk: {
+    fontFamily: fonts.secondary.regular,
+    fontSize: 12,
+    color: colors.grey.color01,
+    marginTop: 2,
+  },
+  chevronIcon: {
+    width: 20,
+    height: 20,
+    tintColor: colors.grey.color01,
+  },
+  vaultItemDetails: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.grey.color04,
+  },
+  vaultItemDetail: {
+    alignItems: "flex-start",
+    flex: 1,
+  },
+  detailLabel: {
+    fontFamily: fonts.secondary.regular,
+    fontSize: 12,
+    color: colors.grey.color01,
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontFamily: fonts.primary.semibold,
+    fontSize: 16,
+    color: colors.black.primary,
+  },
+  apyValue: {
+    color: "#00C853",
+  },
+  separator: {
+    height: 1,
+    backgroundColor: colors.grey.color03,
+    marginVertical: 20,
   },
   statRow: {
     flexDirection: "row",
@@ -262,5 +477,66 @@ const styles = StyleSheet.create({
     fontFamily: fonts.secondary.bold,
     fontSize: 16,
     color: colors.black.primary,
+  },
+  vaultItemBalanceRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  vaultItemBalanceValue: {
+    fontFamily: fonts.primary.semibold,
+    fontSize: 16,
+    color: colors.black.primary,
+    marginRight: 4,
+  },
+  vaultItemBalanceCurrency: {
+    fontFamily: fonts.primary.regular,
+    fontSize: 12,
+    color: colors.black.color02,
+  },
+  statsGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  statColumn: {
+    width: "40%",
+    borderRadius: 8,
+  },
+  statGridLabel: {
+    fontFamily: fonts.secondary.regular,
+    fontSize: 12,
+    color: colors.grey.color01,
+    marginBottom: 4,
+  },
+  statGridValue: {
+    fontFamily: fonts.primary.semibold,
+    fontSize: 18,
+    color: colors.black.primary,
+  },
+  statValueRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  statCurrency: {
+    fontFamily: fonts.primary.medium,
+    fontSize: 12,
+    color: colors.black.color02,
+    marginLeft: 4,
+  },  
+  withdrawButton: {
+    backgroundColor: colors.beige.primary,
+    padding: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.beige.color01,
+    width: 44,
+    height: 44,
+  },
+  withdrawIcon: {
+    width: 20,
+    height: 20,
+    tintColor: colors.black.primary,
   },
 });

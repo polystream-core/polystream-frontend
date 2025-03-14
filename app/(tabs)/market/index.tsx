@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   apyText: {
     fontFamily: fonts.primary.medium,
     fontSize: 18,
-    color: "#00C853",
+    color: colors.green.primary,
   },
   apyTitle: {
     fontFamily: fonts.primary.medium,

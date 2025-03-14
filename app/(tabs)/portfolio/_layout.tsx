@@ -19,7 +19,9 @@ export default function Layout() {
           }}
           >
             <Stack.Screen
-            name='polystream-vault' />
+            name='polystream-vault'
+            options={{
+            }} />
           </Stack>
     );
 }
