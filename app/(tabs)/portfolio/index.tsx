@@ -130,12 +130,34 @@ const styles = StyleSheet.create({
     backgroundColor: colors.green.primary,
     opacity: 0.7,
   },
+  // New styles for toggle container
+  toggleContainer: {
+    backgroundColor: colors.grey.white,
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 24,
+    marginBottom: 0,
+    shadowColor: colors.black.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  toggleTitle: {
+    fontFamily: fonts.primary.semibold,
+    fontSize: 18,
+    color: colors.black.primary,
+  },
 });
 
 function PortfolioScreen() {
   const [showTransak, setShowTransak] = useState(false);
   const [showTopUpSuccessPopup, setShowTopUpSuccessPopup] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showYieldSimulation, setShowYieldSimulation] = useState(false);
   const {
     totalBalance,
     accountBalance,
@@ -167,6 +189,10 @@ function PortfolioScreen() {
       setRefreshing(false);
     }
   }, []);
+
+  const toggleYieldSimulation = () => {
+    setShowYieldSimulation(!showYieldSimulation);
+  };
 
   return (
     <View style={styles.bg}>
@@ -246,43 +272,54 @@ function PortfolioScreen() {
             router.navigate("/portfolio/polystream-vault");
           }}
         />
-      </ScrollView>
-      <View style={styles.demoContainer}>
-        <Text style={styles.demoTitle}>Yield Simulation</Text>
-        <TouchableOpacity
-          style={[styles.demoButton, isSimulating && styles.demoButtonDisabled]}
-          disabled={isSimulating}
-          onPress={async () => {
-            try {
-              // Set loading state to true
-              setIsSimulating(true);
 
-              // Advance time by 200 days (to match your test)
-              await advanceTime(200);
-
-              // Harvest rewards
-              await harvestRewards();
-
-              // Refresh balances
-              await refreshUserInfo();
-            } catch (error) {
-              console.error("Simulation error:", error);
-            } finally {
-              // Set loading state back to false when done
-              setIsSimulating(false);
-            }
-          }}
+        {/* Toggle container for yield simulation */}
+        <TouchableOpacity 
+          style={styles.toggleContainer} 
+          onPress={toggleYieldSimulation}
         >
-          {isSimulating ? (
-            <ActivityIndicator color={colors.grey.white} size="small" />
-          ) : (
-            <Text style={styles.demoButtonText}>Fast-forward 200 days</Text>
-          )}
+          <Text style={styles.toggleTitle}>Yield Simulation</Text>
         </TouchableOpacity>
-        <Text style={styles.demoText}>
-          Simulates passing 200 days to demonstrate yield generation
-        </Text>
-      </View>
+
+        {/* Yield Simulation Section - Only shown when toggled */}
+        {showYieldSimulation && (
+          <View style={styles.demoContainer}>
+            <TouchableOpacity
+              style={[styles.demoButton, isSimulating && styles.demoButtonDisabled]}
+              disabled={isSimulating}
+              onPress={async () => {
+                try {
+                  // Set loading state to true
+                  setIsSimulating(true);
+
+                  // Advance time by 200 days (to match your test)
+                  await advanceTime(200);
+
+                  // Harvest rewards
+                  await harvestRewards();
+
+                  // Refresh balances
+                  await refreshUserInfo();
+                } catch (error) {
+                  console.error("Simulation error:", error);
+                } finally {
+                  // Set loading state back to false when done
+                  setIsSimulating(false);
+                }
+              }}
+            >
+              {isSimulating ? (
+                <ActivityIndicator color={colors.grey.white} size="small" />
+              ) : (
+                <Text style={styles.demoButtonText}>Fast-forward 200 days</Text>
+              )}
+            </TouchableOpacity>
+            <Text style={styles.demoText}>
+              Simulates passing 200 days to demonstrate yield generation
+            </Text>
+          </View>
+        )}
+      </ScrollView>
 
       {showTransak && (
         <TransakWidget

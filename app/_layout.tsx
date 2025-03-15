@@ -14,6 +14,9 @@ SplashScreen.preventAutoHideAsync();
 
 // to ignore all logs for presentation
 // LogBox.ignoreAllLogs(true)
+LogBox.ignoreLogs([
+  'Warning: Text strings must be rendered within a <Text> component',
+]);
 
 const toastConfig = {
   success: (props: any) => (

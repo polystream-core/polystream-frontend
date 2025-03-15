@@ -395,7 +395,7 @@ export function useTransaction() {
         // Then multiply by 10^6 to get the scaled value for display
         const displayBalance = Number(formattedBalance) * 1000000;
         console.log(`Display vault balance: ${displayBalance}`);
-
+        
         // Store the multiplied value
         // setVaultBalance(displayBalance);
       } catch (e) {

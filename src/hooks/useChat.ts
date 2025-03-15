@@ -160,7 +160,7 @@ export function useChat() {
 
         try {
             // Execute the transaction
-            transferWalletToVault(riskLevel, amount);
+            transferWalletToVault(amount);
 
             // Create a system message to inform OpenAI about the successful transaction
             const systemStatusMessage: Message = {
