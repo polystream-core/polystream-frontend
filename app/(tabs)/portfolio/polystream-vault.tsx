@@ -19,11 +19,13 @@ import {
 } from "@/src/utils/CustomFormatter";
 import Pill from "@/src/components/Pill";
 import { useUserInfo } from "@/src/hooks/useUserInfo";
+import { useTransaction } from "@/src/hooks/useTransaction";
 import { router } from "expo-router";
 import WithdrawModal from "@/src/components/modals/WithdrawModal";
 
 export default function PolystreamVaultPage() {
   const { vaultApy, vaultBalance, vaultStatus } = useUserInfo();
+  const { transferVaultToWallet } = useTransaction();
   const vaultCurrency = "USD";
   const [showStats, setShowStats] = useState(false);
   // State for withdrawal modal
@@ -78,6 +80,7 @@ export default function PolystreamVaultPage() {
 
     // Handle withdrawal logic here
     console.log(`Withdrawing ${amount} from ${selectedVault.name}`);
+    transferVaultToWallet(amount);
 
     // Close the modal
     setWithdrawModalVisible(false);
@@ -522,7 +525,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.black.color02,
     marginLeft: 4,
-  },  
+  },
   withdrawButton: {
     backgroundColor: colors.beige.primary,
     padding: 10,

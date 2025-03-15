@@ -87,7 +87,8 @@ export default function MarketScreen() {
                   risk: strategy.risk,
                   poolSize: strategy.poolSize.toString(),
                   description: strategy.description,
-                  imageKey: strategy.imageKey
+                  imageKey: strategy.imageKey,
+                  riskLevel: strategy.risk.toLowerCase().trim().split(" ")[0],
                 },
               })
             }

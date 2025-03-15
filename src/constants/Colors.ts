@@ -56,5 +56,8 @@ export const colors: ColorPalette = {
   },
   green: {
     primary: '#00C853',
+    color01: '#00C853',
+    color02: '#00C853',
+    color03: '#00C853'
   }
 };

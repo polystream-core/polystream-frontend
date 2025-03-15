@@ -1,281 +1,157 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
   StyleSheet,
   Image,
-  ScrollView,
   TouchableOpacity,
-  StatusBar,
-  Platform,
-  SafeAreaView,
   Modal,
   TextInput,
   KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { colors } from "@/src/constants/Colors";
 import { fonts } from "@/src/constants/Fonts";
 import { images } from "@/src/constants/Images";
-import {
-  formatNumberWithCommas,
-  resolveApyToString,
-} from "@/src/utils/CustomFormatter";
-import Pill from "@/src/components/Pill";
-import { useUserInfo } from "@/src/hooks/useUserInfo";
-import { router } from "expo-router";
+import { formatNumberWithCommas } from "@/src/utils/CustomFormatter";
 
-export default function PolystreamVaultPage() {
-  const { vaultApy, vaultBalance, vaultStatus } = useUserInfo();
-  const vaultCurrency = "USD";
-  const [showStats, setShowStats] = useState(false);
-  // New state for withdrawal modal
-  const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [selectedVault, setSelectedVault] = useState<null | {
-    id: number;
-    name: string;
-    balance: number;
-    imageKey: string;
-  }>(null);
+interface VaultInfo {
+  id: number;
+  name: string;
+  balance: number;
+  imageKey: string;
+}
 
-  // Mock data for individual vaults
-  const individualVaults = [
-    {
-      id: 1,
-      name: "Conservative Yield Vault",
-      balance: 2500,
-      apy: "3.50%",
-      risk: "Low Risk",
-      imageKey: "green_crystal",
-    },
-    {
-      id: 2,
-      name: "Balanced Growth Vault",
-      balance: 5000,
-      apy: "5.75%",
-      risk: "Medium Risk",
-      imageKey: "yellow_crystal",
-    },
-    {
-      id: 3,
-      name: "Alpha Seeker Vault",
-      balance: 2500,
-      apy: "8.25%",
-      risk: "High Risk",
-      imageKey: "red_crystal",
-    },
-  ];
+interface WithdrawModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: (amount: number) => void;
+  vaultInfo: VaultInfo | null;
+  vaultCurrency: string;
+}
 
-  const handleWithdrawPress = (vault: {
-    id: number;
-    name: string;
-    balance: number;
-    imageKey: string;
-  }) => {
-    setSelectedVault(vault);
+export default function WithdrawModal({
+  visible,
+  onClose,
+  onConfirm,
+  vaultInfo,
+  vaultCurrency,
+}: WithdrawModalProps) {
+  const [withdrawAmount, setWithdrawAmount] = React.useState("");
+
+  React.useEffect(() => {
+    // Reset withdraw amount when modal opens with new vault
     setWithdrawAmount("");
-    setWithdrawModalVisible(true);
-  };
+  }, [vaultInfo]);
 
   const handleWithdraw = () => {
-    if (!selectedVault) return;
-    
+    if (!vaultInfo) return;
+
     const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount <= 0 || amount > selectedVault.balance) {
+    if (isNaN(amount) || amount <= 0 || amount > vaultInfo.balance) {
       // Handle invalid amount (you might want to show an error message)
       console.log("Invalid amount");
       return;
     }
-    
-    // Handle withdrawal logic here
-    console.log(`Withdrawing ${amount} from ${selectedVault.name}`);
-    
-    // Close the modal
-    setWithdrawModalVisible(false);
+
+    onConfirm(amount);
   };
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        {/* Sticky Header */}
-        <View style={styles.stickyHeader}>
-          <TouchableOpacity
-            style={styles.backArrowContainer}
-            onPress={() => router.back()}
-          >
-            <Image
-              source={images.back_arrow}
-              style={styles.backArrowIcon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          <Text style={styles.pageTitle}>Polystream Vault</Text>
-        </View>
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <KeyboardAvoidingView
+        style={styles.centeredView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.modalView}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Withdraw</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Image
+                // source={images.close}
+                style={styles.closeIcon}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          </View>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Main content as before */}
-          {/* ... */}
-          
-          {/* Individual Vaults Section */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Your Vault Positions</Text>
-
-            {individualVaults.map((vault) => (
-              <View key={vault.id} style={styles.vaultItemCard}>
-                <View style={styles.vaultItemHeader}>
-                  <View style={styles.vaultItemLeft}>
-                    <View style={styles.crystalContainer}>
-                      <Image
-                        source={images[vault.imageKey as keyof typeof images]}
-                        style={styles.crystalImage}
-                        resizeMode="contain"
-                      />
-                    </View>
-                    <View>
-                      <Text style={styles.vaultItemName}>{vault.name}</Text>
-                      <Text style={styles.vaultItemRisk}>{vault.risk}</Text>
-                    </View>
-                  </View>
+          {vaultInfo && (
+            <>
+              <View style={styles.modalVaultInfo}>
+                <View style={styles.modalCrystalContainer}>
+                  <Image
+                    source={images[vaultInfo.imageKey as keyof typeof images]}
+                    style={styles.modalCrystalImage}
+                    resizeMode="contain"
+                  />
                 </View>
-
-                <View style={styles.vaultItemDetails}>
-                  <View style={styles.vaultItemDetail}>
-                    <Text style={styles.detailLabel}>Balance</Text>
-                    <View style={styles.vaultItemBalanceRow}>
-                      <Text style={styles.vaultItemBalanceValue}>
-                        {formatNumberWithCommas(vault.balance)}
-                      </Text>
-                      <Text style={styles.vaultItemBalanceCurrency}>
-                        {vaultCurrency}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.vaultItemDetail}>
-                    <Text style={styles.detailLabel}>APY</Text>
-                    <Text style={[styles.detailValue, styles.apyValue]}>
-                      {vault.apy}
+                <View>
+                  <Text style={styles.modalVaultName}>{vaultInfo.name}</Text>
+                  <View style={styles.modalBalanceContainer}>
+                    <Text style={styles.modalBalanceLabel}>Available: </Text>
+                    <Text style={styles.modalBalanceValue}>
+                      {formatNumberWithCommas(vaultInfo.balance)}{" "}
+                      {vaultCurrency}
                     </Text>
                   </View>
+                </View>
+              </View>
 
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Amount to withdraw</Text>
+                <View style={styles.amountInputRow}>
+                  <Text style={styles.currencySymbol}>$</Text>
+                  <TextInput
+                    style={styles.amountInput}
+                    value={withdrawAmount}
+                    onChangeText={setWithdrawAmount}
+                    placeholder="0.00"
+                    keyboardType="numeric"
+                    placeholderTextColor={colors.grey.color02}
+                  />
                   <TouchableOpacity
-                    style={styles.withdrawButton}
-                    onPress={() => handleWithdrawPress(vault)}
+                    style={styles.maxButton}
+                    onPress={() =>
+                      setWithdrawAmount(vaultInfo.balance.toString())
+                    }
                   >
-                    <Image
-                      source={images.withdraw}
-                      style={styles.withdrawIcon}
-                      resizeMode="contain"
-                    />
+                    <Text style={styles.maxButtonText}>MAX</Text>
                   </TouchableOpacity>
                 </View>
               </View>
-            ))}
-          </View>
-        </ScrollView>
-        
-        {/* Withdrawal Modal */}
-        <Modal
-          visible={withdrawModalVisible}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setWithdrawModalVisible(false)}
-        >
-          <KeyboardAvoidingView
-            style={styles.centeredView}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-          >
-            <View style={styles.modalView}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Withdraw</Text>
+
+              <View style={styles.buttonContainer}>
                 <TouchableOpacity
-                  onPress={() => setWithdrawModalVisible(false)}
+                  style={styles.cancelButton}
+                  onPress={onClose}
                 >
-                  <Image
-                    source={images.close}
-                    style={styles.closeIcon}
-                    resizeMode="contain"
-                  />
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={handleWithdraw}
+                >
+                  <Text style={styles.confirmButtonText}>Confirm</Text>
                 </TouchableOpacity>
               </View>
-              
-              {selectedVault && (
-                <>
-                  <View style={styles.modalVaultInfo}>
-                    <View style={styles.modalCrystalContainer}>
-                      <Image
-                        source={images[selectedVault.imageKey as keyof typeof images]}
-                        style={styles.modalCrystalImage}
-                        resizeMode="contain"
-                      />
-                    </View>
-                    <View>
-                      <Text style={styles.modalVaultName}>{selectedVault.name}</Text>
-                      <View style={styles.modalBalanceContainer}>
-                        <Text style={styles.modalBalanceLabel}>Available: </Text>
-                        <Text style={styles.modalBalanceValue}>
-                          {formatNumberWithCommas(selectedVault.balance)} {vaultCurrency}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Amount to withdraw</Text>
-                    <View style={styles.amountInputRow}>
-                      <Text style={styles.currencySymbol}>$</Text>
-                      <TextInput
-                        style={styles.amountInput}
-                        value={withdrawAmount}
-                        onChangeText={setWithdrawAmount}
-                        placeholder="0.00"
-                        keyboardType="numeric"
-                        placeholderTextColor={colors.grey.color02}
-                      />
-                      <TouchableOpacity
-                        style={styles.maxButton}
-                        onPress={() => setWithdrawAmount(selectedVault.balance.toString())}
-                      >
-                        <Text style={styles.maxButtonText}>MAX</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                      style={styles.cancelButton}
-                      onPress={() => setWithdrawModalVisible(false)}
-                    >
-                      <Text style={styles.cancelButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.confirmButton}
-                      onPress={handleWithdraw}
-                    >
-                      <Text style={styles.confirmButtonText}>Confirm</Text>
-                    </TouchableOpacity>
-                  </View>
-                  
-                  <Text style={styles.modalNote}>
-                    Note: Withdrawals may be subject to a 30-day lock period.
-                  </Text>
-                </>
-              )}
-            </View>
-          </KeyboardAvoidingView>
-        </Modal>
-      </SafeAreaView>
-    </View>
+
+              <Text style={styles.modalNote}>
+                Note: Withdrawals may be subject to a 30-day lock period.
+              </Text>
+            </>
+          )}
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  // Keep all existing styles...
-  
-  // Add new styles for modal
   centeredView: {
     flex: 1,
     justifyContent: "center",
@@ -347,7 +223,7 @@ const styles = StyleSheet.create({
     color: colors.grey.color01,
   },
   modalBalanceValue: {
-    fontFamily: fonts.secondary.semibold,
+    fontFamily: fonts.secondary.bold,
     fontSize: 14,
     color: colors.black.primary,
   },

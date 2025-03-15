@@ -17,6 +17,9 @@ import { fonts } from "@/src/constants/Fonts";
 import { router, useLocalSearchParams } from "expo-router";
 import { images } from "@/src/constants/Images";
 import { formatNumberWithCommas } from "@/src/utils/CustomFormatter";
+import { useTransaction } from "@/src/hooks/useTransaction";
+import { useUserInfo } from "@/src/hooks/useUserInfo";
+import Toast from "react-native-toast-message";
 
 export default function StrategyDetails() {
   // Get the parameters from the URL
@@ -26,9 +29,10 @@ export default function StrategyDetails() {
     risk = "Medium Risk",
     poolSize: poolSizeStr = "1250000",
     description = "This strategy optimizes yield by allocating funds across multiple DeFi protocols.",
-    imageKey = "yellow_crystal"
+    imageKey = "yellow_crystal",
   } = useLocalSearchParams();
-
+  const { transferWalletToVault, transferVaultToWallet } = useTransaction();
+  const { accountBalance, vaultBalance, refreshUserInfo, fetchAccountBalance, fetchVaultBalance } = useUserInfo();
   const [stakeAmount, setStakeAmount] = useState("");
 
   // Convert poolSize from string to number
@@ -37,17 +41,67 @@ export default function StrategyDetails() {
   // Calculate daily yield
   const dailyYield = stakeAmount
     ? (
-      (parseFloat(stakeAmount) * (parseFloat(apy as string) / 100)) /
-      365
-    ).toFixed(2)
+        (parseFloat(stakeAmount) * (parseFloat(apy as string) / 100)) /
+        365
+      ).toFixed(2)
     : "0.00";
 
-  const handleStake = () => {
-    // Implement your staking logic here
-    console.log(`Staking ${stakeAmount} in ${name}`);
-    // Navigate to confirmation page or show a success modal
-    router.push("/portfolio");
-  };
+    const handleStake = () => {
+      console.log(`Staking ${stakeAmount} in ${name}`);
+    
+      if (!stakeAmount) {
+        console.error("Please enter a valid stake amount");
+        return;
+      }
+    
+      // Show initial staking toast notification at the top with orange color
+      Toast.show({
+        type: "info",
+        text1: "Staking in progress",
+        text2: `Staking ${stakeAmount} tokens...`,
+        position: "top",
+        visibilityTime: 10000, // Show for 10 seconds (or until replaced)
+        props: {
+          backgroundColor: "#e49b13" // Customize for orange background
+        }
+      });
+    
+      // Start the transfer but don't wait for it
+      transferWalletToVault(parseFloat(stakeAmount))
+        .then(() => {
+          console.log("Transfer complete, refreshing user info...");
+          return Promise.all([fetchVaultBalance(), fetchAccountBalance()]);
+        })
+        .then(() => {
+          // Show success toast when everything is done
+          Toast.show({
+            type: "success",
+            text1: "Staking successful",
+            text2: `Successfully staked ${stakeAmount} tokens`,
+            position: "top",
+            visibilityTime: 6000, // Show for 6 seconds
+            props: {
+              backgroundColor: colors.green.primary // Green background
+            }
+          });
+        })
+        .catch((error) => {
+          console.error("Error during stake process:", error);
+          Toast.show({
+            type: "error",
+            text1: "Staking failed",
+            text2: "There was an error processing your stake",
+            position: "top",
+            visibilityTime: 6000, // Show for 6 seconds
+            props: {
+              backgroundColor: colors.red.primary // Red background
+            }
+          });
+        });
+    
+      // Navigate to portfolio immediately
+      router.push("/portfolio");
+    };
 
   return (
     <KeyboardAvoidingView
@@ -79,7 +133,10 @@ export default function StrategyDetails() {
             <View style={styles.cardHeader}>
               <View style={styles.crystalContainer}>
                 <Image
-                  source={images[imageKey as keyof typeof images] || images.yellow_crystal}
+                  source={
+                    images[imageKey as keyof typeof images] ||
+                    images.yellow_crystal
+                  }
                   style={styles.crystalImage}
                   resizeMode="contain"
                 />
@@ -108,9 +165,7 @@ export default function StrategyDetails() {
 
             {/* Description */}
             <Text style={styles.descriptionTitle}>Strategy Description</Text>
-            <Text style={styles.descriptionText}>
-              {description}
-            </Text>
+            <Text style={styles.descriptionText}>{description}</Text>
           </View>
 
           {/* Staking Section */}
@@ -129,7 +184,7 @@ export default function StrategyDetails() {
               />
               <TouchableOpacity
                 style={styles.maxButton}
-                onPress={() => setStakeAmount("1000")} // Example max amount
+                onPress={() => setStakeAmount(accountBalance.toString())} // Example max amount
               >
                 <Text style={styles.maxButtonText}>MAX</Text>
               </TouchableOpacity>
@@ -137,7 +192,9 @@ export default function StrategyDetails() {
 
             {/* Yield Preview */}
             <View style={styles.yieldPreviewContainer}>
-              <Text style={styles.yieldPreviewTitle}>Estimated Daily Yield</Text>
+              <Text style={styles.yieldPreviewTitle}>
+                Estimated Daily Yield
+              </Text>
               <Text style={styles.yieldPreviewValue}>${dailyYield}</Text>
             </View>
 
@@ -164,7 +221,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   stickyHeader: {
     flexDirection: "row",
@@ -175,7 +232,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.beige.color03,
     zIndex: 10,
-    position: 'relative',
+    position: "relative",
   },
   scrollContent: {
     padding: 20,

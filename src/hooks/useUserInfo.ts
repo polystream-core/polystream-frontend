@@ -1,15 +1,26 @@
 import { useState, useEffect } from "react";
 import { PillStatus } from "@/src/components/Pill";
-import { getAllUserEmbeddedEthereumWallets, useEmbeddedEthereumWallet, usePrivy } from "@privy-io/expo";
+import {
+  getAllUserEmbeddedEthereumWallets,
+  useEmbeddedEthereumWallet,
+  usePrivy,
+} from "@privy-io/expo";
 import { EtherscanService } from "@/src/services/etherscan";
 import { JsonRpcProvider, Contract, formatUnits } from "ethers";
 import { anvilConfig } from "../configs/AnvilConfig";
-import { vaultAbi, vaultCA } from "../contracts/Vault.sol";
+import {
+  COMBINED_VAULT_HIGH_RISK_ABI,
+  COMBINED_VAULT_HIGH_RISK_CA,
+} from "../contracts/CombinedVault.sol";
+import {
+  REWARD_MANAGER_ABI,
+  REWARD_MANAGER_CA,
+} from "../contracts/RewardManager.sol";
 
 export function useUserInfo() {
   const etherscanService = new EtherscanService();
   const { wallets } = useEmbeddedEthereumWallet();
-  const { user, isReady  } = usePrivy();
+  const { user, isReady } = usePrivy();
 
   const [accountBalance, setAccountBalance] = useState<number>(0);
   const [walletAddress, setWalletAddress] = useState<string>(
@@ -30,22 +41,36 @@ export function useUserInfo() {
       "example@scroll.com"
   );
 
-  const embeddedWallets = isReady ? getAllUserEmbeddedEthereumWallets(user) : [];
-  const primaryWallet = embeddedWallets.find(wallet => wallet.wallet_index === 0);
-  const provider = new JsonRpcProvider(anvilConfig.ANVIL_HOST_IP, { chainId: 6666, name: "anvil" });
+  const embeddedWallets = isReady
+    ? getAllUserEmbeddedEthereumWallets(user)
+    : [];
+  const primaryWallet = embeddedWallets.find(
+    (wallet) => wallet.wallet_index === 0
+  );
+  const provider = new JsonRpcProvider(anvilConfig.ANVIL_HOST_IP, {
+    chainId: 6666,
+    name: "anvil",
+  });
 
   // fetch balance from anvil forked Scroll chain instead of ethereum mainnet
   async function fetchAccountBalance() {
     if (walletAddress !== "error") {
+      console.log("Fetching account balance...");
       try {
         // Create an instance of the USDC contract using ethers v6 style
-        const usdcContract = new Contract(anvilConfig.SCROLL_USDC_ADDRESS, anvilConfig.SCROLL_USDC_ABI, provider);
+        const usdcContract = new Contract(
+          anvilConfig.SCROLL_USDC_ADDRESS,
+          anvilConfig.SCROLL_USDC_ABI,
+          provider
+        );
         // TODO: const balanceBN = await usdcContract.balanceOf(walletAddress);
-        const balanceBN = await usdcContract.balanceOf(anvilConfig.ANVIL_PRE_FUNDED_WALLET_ADDRESS);
+        const balanceBN = await usdcContract.balanceOf(
+          anvilConfig.ANVIL_PRE_FUNDED_WALLET_ADDRESS
+        );
         // USDC uses 6 decimals; format the balance accordingly.
         const newBalance = Number(formatUnits(balanceBN, 6)) * 1000000;
-        console.log("User Account Balance:", newBalance);
-        setAccountBalance(+newBalance);
+        console.log("User Account Balance:", newBalance.toFixed(2));
+        setAccountBalance(+newBalance.toFixed(2));
       } catch (error) {
         console.error("Error fetching balance:", error);
         setAccountBalance(12000);
@@ -55,35 +80,32 @@ export function useUserInfo() {
 
   async function fetchVaultBalance() {
     if (walletAddress !== "error") {
+      console.log("Fetching Vault Balance...");
       try {
         const vaultContract = new Contract(
-          vaultCA,
-          vaultAbi,
+          COMBINED_VAULT_HIGH_RISK_CA,
+          COMBINED_VAULT_HIGH_RISK_ABI,
           provider
         );
-        
+
+        const rewardManagerContract = new Contract(
+          REWARD_MANAGER_CA,
+          REWARD_MANAGER_ABI,
+          provider
+        );
+
         // Get user's balance in the vault
         const vaultBalance = await vaultContract.balanceOf(anvilConfig.ANVIL_PRE_FUNDED_WALLET_ADDRESS);
-        // TODO: const vaultBalance = await vaultContract.balanceOf(walletAddress);
+        // First format it with correct decimals
+        const formattedBalance = formatUnits(vaultBalance, 6);
+        console.log(`Vault balance: ${formattedBalance}`);
 
-        // Get the decimals to properly format the value
-        const decimals = await vaultContract.decimals();
+        // Then multiply by 10^6 to get the scaled value for display
+        const displayBalance = Number(formattedBalance) * 1000000;
+        console.log(`Display vault balance: ${displayBalance}`);
 
-        // Convert to a basic number format first
-        const rawFormattedBalance = Number(formatUnits(vaultBalance, decimals));
-
-        // Apply a scaling factor
-        // If you want to convert 2.5e-16 to 250, you need to multiply by 10^18
-        const scaleFactor = 1e18;
-        const humanReadableBalance = rawFormattedBalance * scaleFactor;
-
-        // Format to 2 decimal places
-        const formattedBalance = parseFloat(humanReadableBalance.toFixed(2));
-
-        console.log("User Vault Balance:", formattedBalance);
-
-        // Store the formatted value
-        setVaultBalance(formattedBalance);
+        // Store the multiplied value
+        setVaultBalance(displayBalance);
       } catch (error) {
         console.error("Error fetching vault balance:", error);
         setVaultBalance(40000);
@@ -123,5 +145,7 @@ export function useUserInfo() {
     provider,
     primaryWallet,
     isReady,
+    fetchAccountBalance,
+    fetchVaultBalance,
   };
 }

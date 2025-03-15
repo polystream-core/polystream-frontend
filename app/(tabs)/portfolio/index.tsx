@@ -1,5 +1,8 @@
 import React, { useState, useCallback } from "react";
-import { formatNumberWithCommas, resolveApyToString } from "@/src/utils/CustomFormatter";
+import {
+  formatNumberWithCommas,
+  resolveApyToString,
+} from "@/src/utils/CustomFormatter";
 import ActionBar from "@/src/components/ActionBar";
 import VaultButton from "@/src/components/buttons/VaultButton";
 import TransakWidget from "@/src/components/transak/TransakWidget";
@@ -8,9 +11,19 @@ import { fonts } from "@/src/constants/Fonts";
 import { images } from "@/src/constants/Images";
 import { usePrivy } from "@privy-io/expo";
 import { router } from "expo-router";
-import { View, Text, StyleSheet, Image, ScrollView, RefreshControl } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  RefreshControl,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import SuccessPopup from "@/src/components/transak/SuccessPopup";
 import { useUserInfo } from "@/src/hooks/useUserInfo";
+import { useTransaction } from "@/src/hooks/useTransaction";
 
 const styles = StyleSheet.create({
   bg: {
@@ -74,13 +87,68 @@ const styles = StyleSheet.create({
   refreshIndicator: {
     backgroundColor: "transparent",
   },
+  // Add these to your existing styles object
+  demoContainer: {
+    backgroundColor: colors.grey.white,
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 24,
+    marginBottom: 24,
+    shadowColor: colors.black.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  demoTitle: {
+    fontFamily: fonts.primary.semibold,
+    fontSize: 18,
+    color: colors.black.primary,
+    marginBottom: 16,
+  },
+  demoButton: {
+    backgroundColor: colors.green.primary,
+    borderRadius: 12,
+    height: 56,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  demoButtonText: {
+    fontFamily: fonts.primary.bold,
+    fontSize: 16,
+    color: colors.grey.white,
+  },
+  demoText: {
+    fontFamily: fonts.secondary.regular,
+    fontSize: 12,
+    color: colors.grey.color01,
+    textAlign: "center",
+    lineHeight: 16,
+  },
+  demoButtonDisabled: {
+    backgroundColor: colors.green.primary,
+    opacity: 0.7,
+  },
 });
 
 function PortfolioScreen() {
   const [showTransak, setShowTransak] = useState(false);
   const [showTopUpSuccessPopup, setShowTopUpSuccessPopup] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const { totalBalance, accountBalance, accountStatus, accountApy, vaultBalance, vaultStatus, vaultApy, refreshUserInfo, walletAddress } = useUserInfo();
+  const {
+    totalBalance,
+    accountBalance,
+    accountStatus,
+    accountApy,
+    vaultBalance,
+    vaultStatus,
+    vaultApy,
+    refreshUserInfo,
+    walletAddress,
+  } = useUserInfo();
+  const { advanceTime, harvestRewards } = useTransaction();
+  const [isSimulating, setIsSimulating] = useState(false);
 
   const handleTransakClose = () => {
     setShowTransak(false);
@@ -90,7 +158,7 @@ function PortfolioScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await refreshUserInfo();
       console.log("Data refreshed!");
     } catch (error) {
@@ -137,7 +205,11 @@ function PortfolioScreen() {
               label: "Send",
               onPress: () => console.log("Send pressed"),
             },
-            { icon: images.details, label: "More", onPress: () => console.log('More pressed') },
+            {
+              icon: images.details,
+              label: "More",
+              onPress: () => console.log("More pressed"),
+            },
           ]}
         />
       </View>
@@ -175,9 +247,49 @@ function PortfolioScreen() {
           }}
         />
       </ScrollView>
+      <View style={styles.demoContainer}>
+        <Text style={styles.demoTitle}>Yield Simulation</Text>
+        <TouchableOpacity
+          style={[styles.demoButton, isSimulating && styles.demoButtonDisabled]}
+          disabled={isSimulating}
+          onPress={async () => {
+            try {
+              // Set loading state to true
+              setIsSimulating(true);
+
+              // Advance time by 200 days (to match your test)
+              await advanceTime(200);
+
+              // Harvest rewards
+              await harvestRewards();
+
+              // Refresh balances
+              await refreshUserInfo();
+            } catch (error) {
+              console.error("Simulation error:", error);
+            } finally {
+              // Set loading state back to false when done
+              setIsSimulating(false);
+            }
+          }}
+        >
+          {isSimulating ? (
+            <ActivityIndicator color={colors.grey.white} size="small" />
+          ) : (
+            <Text style={styles.demoButtonText}>Fast-forward 200 days</Text>
+          )}
+        </TouchableOpacity>
+        <Text style={styles.demoText}>
+          Simulates passing 200 days to demonstrate yield generation
+        </Text>
+      </View>
 
       {showTransak && (
-        <TransakWidget visible={showTransak} onClose={handleTransakClose} walletAddress={walletAddress} />
+        <TransakWidget
+          visible={showTransak}
+          onClose={handleTransakClose}
+          walletAddress={walletAddress}
+        />
       )}
 
       {/* Render the SuccessPopup when showPopup is true */}
