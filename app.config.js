@@ -46,6 +46,8 @@ export default {
             ETHERSCAN_API_KEY: process.env.ETHERSCAN_API_KEY,
             ANVIL_HOST_IP: process.env.ANVIL_HOST_IP,
             OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+            PAYMASTER_URL: process.env.PAYMASTER_URL,
+            BUNDLER_URL: process.env.BUNDLER_URL,
         }
     }
 };
