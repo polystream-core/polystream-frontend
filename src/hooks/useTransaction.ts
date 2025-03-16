@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react";
-import { Wallet, Contract, parseUnits, formatUnits, ethers, JsonRpcProvider} from "ethers";
+import {
+  Wallet,
+  Contract,
+  parseUnits,
+  formatUnits,
+  ethers,
+  JsonRpcProvider,
+} from "ethers";
 import { useUserInfo } from "./useUserInfo";
 import { MOCK_USDC_CA, MOCK_USDC_ABI } from "../contracts/MockUSDC.sol";
 import {
-  MOCK_COMBINED_VAULT_CA,
-  MOCK_COMBINED_VAULT_ABI,
+  MOCK_COMBINED_MEDIUM_RISK_VAULT_CA,
+  MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI,
+  MOCK_COMBINED_HIGH_RISK_VAULT_ABI,
+  MOCK_COMBINED_HIGH_RISK_VAULT_CA,
 } from "../contracts/MockCombinedVault.sol";
 
 export function useTransaction() {
@@ -15,19 +24,7 @@ export function useTransaction() {
     smartAccount,
   } = useUserInfo();
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [provider, setProvider] = useState<JsonRpcProvider | null>(null);
-  const [signer, setSigner] = useState<Wallet | null>(null);
-  const [usdcContract, setUsdcContract] = useState<Contract | null>(null);
-  const [registryContract, setRegistryContract] = useState<Contract | null>(
-    null
-  );
-  const [aaveAdapterContract, setAaveAdapterContract] =
-    useState<Contract | null>(null);
-  const [rewardManagerContract, setRewardManagerContract] =
-    useState<Contract | null>(null);
-  const [highRiskVaultContract, setHighRiskVaultContract] =
-    useState<Contract | null>(null);
 
   // Initialize wallet and provider
   useEffect(() => {
@@ -59,33 +56,10 @@ export function useTransaction() {
     initialiseProvider();
   }, [isInitialized]);
 
-  // And in your initialization code:
-  useEffect(() => {
-    const initializeContracts = async () => {
-      if (!isInitialized || !provider || !signer) return;
-
-      try {
-        const usdcContract = new Contract(MOCK_USDC_CA, MOCK_USDC_ABI, provider);
-
-        const mockCombinedVault = new Contract(
-          MOCK_COMBINED_VAULT_CA,
-          MOCK_COMBINED_VAULT_ABI,
-          signer
-        );
-
-        setUsdcContract(usdcContract);
-        setHighRiskVaultContract(mockCombinedVault);
-
-        console.log("Contracts initialized");
-      } catch (error) {
-        console.error("Error initializing contracts:", error);
-      }
-    };
-
-    initializeContracts();
-  }, [isInitialized, provider]);
-
-  async function transferWalletToVault(amount: number | undefined) {
+  async function transferWalletToVault(
+    amount: number | undefined,
+    riskLevel: number
+  ) {
     if (!amount || !smartAccount || !smartAccountAddress) {
       console.error("Missing amount or smart account not initialized");
       return;
@@ -100,7 +74,15 @@ export function useTransaction() {
 
       // USDC and Vault contract addresses
       const usdcAddress = MOCK_USDC_CA;
-      const vaultAddress = MOCK_COMBINED_VAULT_CA;
+      let vaultAddress: string;
+      let vaultABI: any;
+      if (riskLevel === 3) {
+        vaultAddress = MOCK_COMBINED_HIGH_RISK_VAULT_CA;
+        vaultABI = MOCK_COMBINED_HIGH_RISK_VAULT_ABI;
+      } else {
+        vaultAddress = MOCK_COMBINED_MEDIUM_RISK_VAULT_CA;
+        vaultABI = MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI;
+      }
 
       // Create the USDC approve call data
       const usdcInterface = new ethers.Interface(MOCK_USDC_ABI);
@@ -110,7 +92,7 @@ export function useTransaction() {
       ]);
 
       // Create the vault deposit call data
-      const vaultInterface = new ethers.Interface(MOCK_COMBINED_VAULT_ABI);
+      const vaultInterface = new ethers.Interface(vaultABI);
       const depositCalldata = vaultInterface.encodeFunctionData("deposit", [
         smartAccountAddress,
         amountInWei,
@@ -133,10 +115,7 @@ export function useTransaction() {
         data: depositCalldata,
       });
 
-
-      console.log(
-        "Deposit successful.",
-      );
+      console.log("Deposit successful.");
 
       // Verify vault balance
       try {
@@ -149,7 +128,7 @@ export function useTransaction() {
         // Check vault balance
         const vault = new ethers.Contract(
           vaultAddress,
-          MOCK_COMBINED_VAULT_ABI,
+          MOCK_COMBINED_HIGH_RISK_VAULT_ABI,
           provider
         );
         const vaultBalance = await vault.balanceOf(smartAccountAddress);
@@ -176,54 +155,62 @@ export function useTransaction() {
       console.error("Missing amount or smart account not initialized");
       return;
     }
-  
+
     try {
       console.log(`Withdrawing ${amount} shares from vault...`);
-  
+
       // Convert amount to the correct format (USDC has 6 decimals)
       const amountInWei = parseUnits(amount.toString(), 6);
       console.log(`Amount in wei (scaled with 6 decimals): ${amountInWei}`);
-  
+
       // Vault contract address
-      const vaultAddress = MOCK_COMBINED_VAULT_CA;
-  
+      const vaultAddress = MOCK_COMBINED_MEDIUM_RISK_VAULT_CA;
+
       // Create the vault withdraw call data
-      const vaultInterface = new ethers.Interface(MOCK_COMBINED_VAULT_ABI);
+      const vaultInterface = new ethers.Interface(
+        MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI
+      );
       const withdrawCalldata = vaultInterface.encodeFunctionData("withdraw", [
         smartAccountAddress,
-        amountInWei
+        amountInWei,
       ]);
-  
+
       // Send the transaction through the smart account
       console.log("Withdrawing from vault...");
       const withdrawUserOpResponse = await smartAccount.sendTransaction({
         to: vaultAddress,
         data: withdrawCalldata,
       });
-      
+
       // Get the transaction hash and wait for it to be mined
       console.log("Waiting for withdrawal transaction to be mined...");
       console.log("Withdrawal successful");
-  
+
       // Verify balances after withdrawal
       try {
         // Check USDC balance
         const usdc = new ethers.Contract(MOCK_USDC_CA, MOCK_USDC_ABI, provider);
         const finalBalance = await usdc.balanceOf(smartAccountAddress);
-        console.log(`Final wallet USDC balance: ${formatUnits(finalBalance, 6)}`);
-  
+        console.log(
+          `Final wallet USDC balance: ${formatUnits(finalBalance, 6)}`
+        );
+
         // Check vault balance
-        const vault = new ethers.Contract(vaultAddress, MOCK_COMBINED_VAULT_ABI, provider);
+        const vault = new ethers.Contract(
+          vaultAddress,
+          MOCK_COMBINED_HIGH_RISK_VAULT_ABI,
+          provider
+        );
         const vaultBalance = await vault.balanceOf(smartAccountAddress);
         const formattedBalance = formatUnits(vaultBalance, 6);
         console.log(`Vault balance: ${formattedBalance}`);
       } catch (e) {
         console.log("Could not retrieve balances:", e);
       }
-      
+
       // Refresh user info after successful withdrawal
       await refreshUserInfo();
-  
+
       return true;
     } catch (error) {
       console.error("Error transferring from vault:", error);
@@ -235,6 +222,5 @@ export function useTransaction() {
     transferWalletToVault,
     transferVaultToWallet,
     isInitialized,
-    isSetupComplete,
   };
 }

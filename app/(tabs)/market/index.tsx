@@ -52,7 +52,7 @@ export default function MarketScreen() {
     {
       id: 2,
       name: "Balanced Growth",
-      apy: "5.75%",
+      apy: "3000%",
       risk: "Medium Risk",
       poolSize: 1250000,
       description: "A balanced approach allocating capital across multiple DeFi protocols with moderate risk exposure. This strategy optimizes for consistent returns while adapting to changing market conditions.",
@@ -61,7 +61,7 @@ export default function MarketScreen() {
     {
       id: 3,
       name: "Alpha Seeker",
-      apy: "8.25%",
+      apy: "10000%",
       risk: "High Risk",
       poolSize: 750000,
       description: "Our highest yield strategy leveraging advanced DeFi techniques including strategic position management and yield farming across emerging protocols with higher risk profiles for maximum returns.",

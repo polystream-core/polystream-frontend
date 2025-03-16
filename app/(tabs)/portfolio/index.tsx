@@ -280,51 +280,13 @@ function PortfolioScreen() {
           <Text style={styles.toggleTitle}>Yield Simulation</Text>
         </TouchableOpacity>
 
-        {/* Yield Simulation Section - Only shown when toggled */}
-        {showYieldSimulation && (
-          <View style={styles.demoContainer}>
-            <TouchableOpacity
-              style={[styles.demoButton, isSimulating && styles.demoButtonDisabled]}
-              disabled={isSimulating}
-              onPress={async () => {
-                try {
-                  // Set loading state to true
-                  setIsSimulating(true);
-
-                  // Advance time by 200 days (to match your test)
-                  await advanceTime(200);
-
-                  // Harvest rewards
-                  await harvestRewards();
-
-                  // Refresh balances
-                  await refreshUserInfo();
-                } catch (error) {
-                  console.error("Simulation error:", error);
-                } finally {
-                  // Set loading state back to false when done
-                  setIsSimulating(false);
-                }
-              }}
-            >
-              {isSimulating ? (
-                <ActivityIndicator color={colors.grey.white} size="small" />
-              ) : (
-                <Text style={styles.demoButtonText}>Fast-forward 200 days</Text>
-              )}
-            </TouchableOpacity>
-            <Text style={styles.demoText}>
-              Simulates passing 200 days to demonstrate yield generation
-            </Text>
-          </View>
-        )}
       </ScrollView>
 
       {showTransak && (
         <TransakWidget
           visible={showTransak}
           onClose={handleTransakClose}
-          walletAddress={walletAddress}
+          walletAddress={embeddedWalletAddress}
         />
       )}
 

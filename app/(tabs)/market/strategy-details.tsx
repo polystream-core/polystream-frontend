@@ -32,7 +32,13 @@ export default function StrategyDetails() {
     imageKey = "yellow_crystal",
   } = useLocalSearchParams();
   const { transferWalletToVault, transferVaultToWallet } = useTransaction();
-  const { accountBalance, vaultBalance, refreshUserInfo, fetchAccountBalance, fetchVaultBalance } = useUserInfo();
+  const {
+    accountBalance,
+    vaultBalance,
+    refreshUserInfo,
+    fetchAccountBalance,
+    fetchVaultBalance,
+  } = useUserInfo();
   const [stakeAmount, setStakeAmount] = useState("");
 
   // Convert poolSize from string to number
@@ -46,62 +52,78 @@ export default function StrategyDetails() {
       ).toFixed(2)
     : "0.00";
 
-    const handleStake = () => {
-      console.log(`Staking ${stakeAmount} in ${name}`);
-    
-      if (!stakeAmount) {
-        console.error("Please enter a valid stake amount");
-        return;
+  const handleStake = () => {
+    console.log("Risk level:", risk);
+    console.log(`Staking ${stakeAmount} in ${name} with risk level: ${risk}`);
+
+    if (!stakeAmount) {
+      console.error("Please enter a valid stake amount");
+      return;
+    }
+
+    // Determine the numeric risk level from the risk string
+    let riskLevel = 1; // Default to low risk
+
+    if (typeof risk === "string") {
+      if (risk.toLowerCase().includes("low")) {
+        riskLevel = 1; // Low risk
+      } else if (risk.toLowerCase().includes("medium")) {
+        riskLevel = 2; // Medium risk
+      } else if (risk.toLowerCase().includes("high")) {
+        riskLevel = 3; // High risk
       }
-    
-      // Show initial staking toast notification at the top with orange color
-      Toast.show({
-        type: "info",
-        text1: "Staking in progress",
-        text2: `Staking ${stakeAmount} tokens...`,
-        position: "top",
-        visibilityTime: 20000,
-        props: {
-          backgroundColor: "#e49b13" // Customize for orange background
-        }
-      });
-    
-      // Start the transfer but don't wait for it
-      transferWalletToVault(parseFloat(stakeAmount))
-        .then(() => {
-          console.log("Transfer complete, refreshing user info...");
-          return Promise.all([fetchVaultBalance(), fetchAccountBalance()]);
-        })
-        .then(() => {
-          // Show success toast when everything is done
-          Toast.show({
-            type: "success",
-            text1: "Staking successful",
-            text2: `Successfully staked ${stakeAmount} tokens`,
-            position: "top",
-            visibilityTime: 6000, // Show for 6 seconds
-            props: {
-              backgroundColor: colors.green.primary // Green background
-            }
-          });
-        })
-        .catch((error) => {
-          console.error("Error during stake process:", error);
-          Toast.show({
-            type: "error",
-            text1: "Staking failed",
-            text2: "There was an error processing your stake",
-            position: "top",
-            visibilityTime: 6000, // Show for 6 seconds
-            props: {
-              backgroundColor: colors.red.primary // Red background
-            }
-          });
+    }
+
+    console.log(`Mapped risk level: ${riskLevel}`);
+
+    // Show initial staking toast notification
+    Toast.show({
+      type: "info",
+      text1: "Staking in progress",
+      text2: `Staking ${stakeAmount} tokens in ${risk} vault...`,
+      position: "top",
+      visibilityTime: 20000,
+      props: {
+        backgroundColor: "#e49b13",
+      },
+    });
+
+    // Start the transfer with the risk level
+    transferWalletToVault(parseFloat(stakeAmount), riskLevel)
+      .then(() => {
+        console.log("Transfer complete, refreshing user info...");
+        return Promise.all([fetchVaultBalance(), fetchAccountBalance()]);
+      })
+      .then(() => {
+        // Show success toast
+        Toast.show({
+          type: "success",
+          text1: "Staking successful",
+          text2: `Successfully staked ${stakeAmount} tokens in ${risk} vault`,
+          position: "top",
+          visibilityTime: 6000,
+          props: {
+            backgroundColor: colors.green.primary,
+          },
         });
-    
-      // Navigate to portfolio immediately
-      router.push("/portfolio");
-    };
+      })
+      .catch((error) => {
+        console.error("Error during stake process:", error);
+        Toast.show({
+          type: "error",
+          text1: "Staking failed",
+          text2: "There was an error processing your stake",
+          position: "top",
+          visibilityTime: 6000,
+          props: {
+            backgroundColor: colors.red.primary,
+          },
+        });
+      });
+
+    // Navigate to portfolio immediately
+    router.push("/portfolio");
+  };
 
   return (
     <KeyboardAvoidingView
