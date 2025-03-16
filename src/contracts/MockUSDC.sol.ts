@@ -1,4 +1,4 @@
-export const MOCK_USDC_CA = "0xB5e348b6f2453DfB685252eEBeD893beA1df9d5d";
+export const MOCK_USDC_CA = "0x78bD59b3d9DAbDab8A39958E32dA04CCe9E2E6e8";
 
 export const MOCK_USDC_ABI = [
   "function balanceOf(address owner) view returns (uint256)",

@@ -22,9 +22,10 @@ import { useUserInfo } from "@/src/hooks/useUserInfo";
 import { useTransaction } from "@/src/hooks/useTransaction";
 import { router } from "expo-router";
 import WithdrawModal from "@/src/components/modals/WithdrawModal";
+import Toast from "react-native-toast-message";
 
 export default function PolystreamVaultPage() {
-  const { vaultApy, vaultBalance, vaultStatus } = useUserInfo();
+  const { vaultApy, vaultBalance, vaultStatus, refreshUserInfo } = useUserInfo();
   const { transferVaultToWallet } = useTransaction();
   const vaultCurrency = "USD";
   const [showStats, setShowStats] = useState(false);
@@ -42,7 +43,7 @@ export default function PolystreamVaultPage() {
     {
       id: 1,
       name: "Conservative Yield Vault",
-      balance: 2500,
+      balance: (vaultBalance * 0.10).toFixed(0),
       apy: "3.50%",
       risk: "Low Risk",
       imageKey: "green_crystal",
@@ -50,7 +51,7 @@ export default function PolystreamVaultPage() {
     {
       id: 2,
       name: "Balanced Growth Vault",
-      balance: 5000,
+      balance: (vaultBalance * 0.30).toFixed(0),
       apy: "5.75%",
       risk: "Medium Risk",
       imageKey: "yellow_crystal",
@@ -58,7 +59,7 @@ export default function PolystreamVaultPage() {
     {
       id: 3,
       name: "Alpha Seeker Vault",
-      balance: 2500,
+      balance:( vaultBalance * 0.60).toFixed(0),
       apy: "8.25%",
       risk: "High Risk",
       imageKey: "red_crystal",
@@ -75,15 +76,64 @@ export default function PolystreamVaultPage() {
     setWithdrawModalVisible(true);
   };
 
-  const handleWithdrawConfirm = (amount: number) => {
+  const handleWithdrawConfirm = async (amount: number) => {
     if (!selectedVault) return;
-
-    // Handle withdrawal logic here
-    console.log(`Withdrawing ${amount} from ${selectedVault.name}`);
-    transferVaultToWallet(amount);
-
-    // Close the modal
+  
+    // Get vault name for toast messages
+    const vaultName = selectedVault.name;
+    
+    // Show initial withdrawal toast notification
+    Toast.show({
+      type: "info",
+      text1: "Withdrawal in progress",
+      text2: `Withdrawing ${amount} from ${vaultName}...`,
+      position: "top",
+      visibilityTime: 20000, // Long duration as the transaction might take time
+      props: {
+        backgroundColor: "#e49b13" // Orange background for in-progress
+      }
+    });
+    
+    // Navigate to portfolio immediately
+    router.push("/portfolio");
     setWithdrawModalVisible(false);
+    try {
+      // Execute the withdrawal transaction
+      await transferVaultToWallet(amount);
+      
+      // Show success toast when transaction completes
+      Toast.show({
+        type: "success",
+        text1: "Withdrawal successful",
+        text2: `Successfully withdrew ${amount} from ${vaultName}`,
+        position: "top",
+        visibilityTime: 6000, // Show for 6 seconds
+        props: {
+          backgroundColor: colors.green.primary // Green background
+        }
+      });
+      
+      // Refresh balances
+      // await refreshUserInfo();
+      
+    } catch (error) {
+      console.error("Error during withdrawal process:", error);
+      
+      // Show error toast when transaction fails
+      Toast.show({
+        type: "error",
+        text1: "Withdrawal failed",
+        text2: "There was an error processing your withdrawal",
+        position: "top",
+        visibilityTime: 6000, // Show for 6 seconds
+        props: {
+          backgroundColor: colors.red.primary // Red background
+        }
+      });
+    } finally {
+      // Close the modal
+      setWithdrawModalVisible(false);
+    }
   };
 
   return (

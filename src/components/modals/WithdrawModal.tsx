@@ -48,8 +48,7 @@ export default function WithdrawModal({
     if (!vaultInfo) return;
 
     const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount <= 0 || amount > vaultInfo.balance) {
-      // Handle invalid amount (you might want to show an error message)
+    if (isNaN(amount) || amount <= 0) {
       console.log("Invalid amount");
       return;
     }

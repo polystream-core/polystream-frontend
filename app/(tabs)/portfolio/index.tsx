@@ -167,9 +167,8 @@ function PortfolioScreen() {
     vaultStatus,
     vaultApy,
     refreshUserInfo,
-    walletAddress,
+    embeddedWalletAddress,
   } = useUserInfo();
-  const { advanceTime, harvestRewards } = useTransaction();
   const [isSimulating, setIsSimulating] = useState(false);
 
   const handleTransakClose = () => {

@@ -11,39 +11,21 @@ import {
   createSmartAccountClient,
 } from "@biconomy/abstractjs";
 import { EtherscanService } from "@/src/services/etherscan";
-import { Contract, formatUnits, ethers } from "ethers";
-import { anvilConfig } from "../configs/AnvilConfig";
-import {
-  COMBINED_VAULT_HIGH_RISK_ABI,
-  COMBINED_VAULT_HIGH_RISK_CA,
-} from "../contracts/CombinedVault.sol";
-import {
-  REWARD_MANAGER_ABI,
-  REWARD_MANAGER_CA,
-} from "../contracts/RewardManager.sol";
-import {
-  encodeFunctionData,
-  createWalletClient,
-  createPublicClient,
-  http,
-  custom,
-  parseEther,
-  parseGwei,
-} from "viem";
+import { Contract, formatUnits, ethers, parseUnits } from "ethers";
+import { createWalletClient, http, custom } from "viem";
 import {
   MOCK_COMBINED_VAULT_ABI,
   MOCK_COMBINED_VAULT_CA,
 } from "../contracts/MockCombinedVault.sol";
+import { MOCK_USDC_ABI, MOCK_USDC_CA } from "../contracts/MockUSDC.sol";
 import { baseSepolia } from "viem/chains";
 import { env } from "../constants/AppConfig";
 
 export function useUserInfo() {
-  const etherscanService = new EtherscanService();
   const { wallets } = useEmbeddedEthereumWallet();
   const { user, isReady } = usePrivy();
-
   const [accountBalance, setAccountBalance] = useState<number>(0);
-  const [walletAddress, setWalletAddress] = useState<string>(
+  const [embeddedWalletAddress, setEmbeddedWalletAddress] = useState<string>(
     wallets[0]?.address || "error"
   );
   const [accountApy, setAccountApy] = useState<number>(-0.03);
@@ -51,18 +33,15 @@ export function useUserInfo() {
   const [vaultBalance, setVaultBalance] = useState<number>(0);
   const [vaultApy, setVaultApy] = useState<number>(69.2);
   const [vaultStatus, setVaultStatus] = useState<PillStatus>("active");
-  const totalBalance = accountBalance + vaultBalance;
+  const totalBalance = Number(accountBalance + vaultBalance).toFixed(0);
 
   const [name, setName] = useState<string>("Chee Heng");
   const [username, setUsername] = useState<string>("cheeheng10");
-  const [email, setEmail] = useState<string>(
-    // @ts-ignore
-    user.linked_accounts.find((account) => account.type === "email")?.address ||
-      "example@scroll.com"
-  );
+  const [email, setEmail] = useState<string>("example@scroll.com");
   const [smartAccount, setSmartAccount] = useState(null);
   const [smartAccountAddress, setSmartAccountAddress] = useState("");
   const [isSmartAccountReady, setIsSmartAccountReady] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
 
   const embeddedWallets = isReady
     ? getAllUserEmbeddedEthereumWallets(user)
@@ -70,198 +49,245 @@ export function useUserInfo() {
   const primaryWallet = embeddedWallets.find(
     (wallet) => wallet.wallet_index === 0
   );
-  // const provider = new JsonRpcProvider(anvilConfig.ANVIL_HOST_IP, {
-  //   chainId: 6666,
-  //   name: "anvil",
-  // });
   const provider = new ethers.JsonRpcProvider("https://sepolia.base.org", {
     chainId: 84532,
     name: "Base Sepolia",
   });
-  const hasExecutedTx = useRef(false);
 
-  const initSmartAccount = useCallback(async () => {
-    if (!wallets?.[0] || walletAddress === "error") return;
+  // Fetch initial balances once we have a smart account address
+  async function fetchInitialBalances(address: any) {
+    console.log("Fetching initial balances for address:", address);
+    
+    // Create contracts with the provider
+    const usdcContract = new Contract(MOCK_USDC_CA, MOCK_USDC_ABI, provider);
+    const vaultContract = new Contract(MOCK_COMBINED_VAULT_CA, MOCK_COMBINED_VAULT_ABI, provider);
+    
+    // Fetch account balance
+    const balanceBN = await usdcContract.balanceOf(address);
+    const formattedBalance = Number(formatUnits(balanceBN, 6));
+    console.log("Initial User Account Balance:", formattedBalance.toFixed(0));
+    setAccountBalance(+formattedBalance.toFixed(0));
+    
+    // Fetch vault balance
+    const vaultBalance = await vaultContract.balanceOf(address);
+    const formattedVaultBalance = Number(formatUnits(vaultBalance, 6));
+    console.log("Initial Vault Balance:", formattedVaultBalance.toFixed(0));
+    setVaultBalance(Number(formattedVaultBalance.toFixed(0)));
+  }
 
-    try {
-      // Create a viem wallet client using Privy's embedded wallet
-      const client = createWalletClient({
-        account: walletAddress as `0x${string}`,
-        chain: baseSepolia,
-        transport: custom({
-          async request({ method, params }) {
-            // First get the provider (it's a Promise)
-            const provider = await wallets[0].getProvider();
-            // Then call request() on the resolved provider
-            return await provider.request({ method, params });
-          },
-        }),
-      });
-
-      console.log("Bundler URL:", env.BUNDLER_URL);
-      console.log("Paymaster API Key:", env.PAYMASTER_URL);
-
-      // Initialize Biconomy smart account
-      const smartAccountClient = createSmartAccountClient({
-        account: await toNexusAccount({
-          signer: client, // Your existing client
+  // Initialize smart account
+  useEffect(() => {
+    async function initialize() {
+      if (!wallets?.[0] || embeddedWalletAddress === "error") return;
+      
+      // Prevent multiple simultaneous initialization attempts
+      if (isInitializing) return;
+      setIsInitializing(true);
+      
+      try {
+        console.log("Starting smart account initialization...");
+        // Create a viem wallet client using Privy's embedded wallet
+        const client = createWalletClient({
+          account: embeddedWalletAddress as `0x${string}`,
           chain: baseSepolia,
-          transport: http(),
-        }),
-        transport: http(env.BUNDLER_URL), // Full URL
-        paymaster: createBicoPaymasterClient({
-          paymasterUrl: env.PAYMASTER_URL, // Full URL
-        }),
-      });
+          transport: custom({
+            async request({ method, params }) {
+              const provider = await wallets[0].getProvider();
+              return await provider.request({ method, params });
+            },
+          }),
+        });
 
-      // Get and store the smart account address
-      const address =
-        await smartAccountClient.account.getCounterFactualAddress();
+        // Initialize Biconomy smart account
+        const smartAccountClient = createSmartAccountClient({
+          account: await toNexusAccount({
+            signer: client,
+            chain: baseSepolia,
+            transport: http(),
+          }),
+          transport: http(env.BUNDLER_URL),
+          paymaster: createBicoPaymasterClient({
+            paymasterUrl: env.PAYMASTER_URL,
+          }),
+        });
 
-      console.log("Smart account address: ", address);
+        // Get and store the smart account address
+        const address = await smartAccountClient.account.getCounterFactualAddress();
+        console.log("Smart account address initialized: ", address);
 
-      setSmartAccount(smartAccountClient);
-      setSmartAccountAddress(address);
-      setIsSmartAccountReady(true);
-    } catch (error) {
-      console.error("Error initializing smart account:", error);
-      setIsSmartAccountReady(false);
-    }
-  }, [wallets, walletAddress]);
+        // Set the state values
+        setSmartAccount(smartAccountClient);
+        setSmartAccountAddress(address);
+        setIsSmartAccountReady(true);
 
-  useEffect(() => {
-    if (
-      isSmartAccountReady &&
-      smartAccountAddress &&
-      smartAccount &&
-      !hasExecutedTx.current
-    ) {
-      // Set the ref to true to prevent future executions
-      hasExecutedTx.current = true;
-
-      // send gasless transaction
-      try {
-        // console.log("Smart account:", smartAccount);
-        console.log("Smart account address:", smartAccountAddress);
-        console.log("Is smart account ready:", isSmartAccountReady);
-        sendTestTransaction();
+        // Now that we have a valid address, fetch the balances
+        try {
+          await fetchInitialBalances(address);
+        } catch (error) {
+          console.error("Error fetching initial balances:", error);
+        }
       } catch (error) {
-        console.error("Error sending gasless transaction:", error);
+        console.error("Error initializing smart account:", error);
+        setIsSmartAccountReady(false);
+      } finally {
+        setIsInitializing(false);
       }
-
-      console.log("Send gasless transaction");
-    }
-  }, [isSmartAccountReady, smartAccountAddress, smartAccount]);
-
-  const sendTestTransaction = async () => {
-    if (!isSmartAccountReady || !smartAccount) {
-      console.error("Smart account not ready");
-      return null;
     }
 
-    try {
-      // Send to a different address, not to itself
-      const testAddress = "0x000000000000000000000000000000000000dEaD"; // Use a burn address for testing
+    initialize();
+  }, [wallets, embeddedWalletAddress]);
 
-      // Send a minimal ETH transfer (proper data format for simple transfer)
-      const transactionResponse = await smartAccount.sendTransaction({
-        calls: [
-          {
-            to: testAddress,
-            data: "0x", // Empty data for ETH transfer
-            value: 1n, // Minimal value (1 wei)
-          },
-        ],
-      });
-
-      await smartAccount.waitForTransactionReceipt({
-        hash: transactionResponse,
-      });
-    } catch (error) {
-      console.error("Error sending test transaction:", error);
-      return null;
-    }
-  };
-
-  useEffect(() => {
-    if (walletAddress !== "error") {
-      initSmartAccount();
-    }
-  }, [walletAddress, initSmartAccount]);
-
-  // fetch balance from anvil forked Scroll chain instead of ethereum mainnet
+  // Fetch account balance
   async function fetchAccountBalance() {
-    if (walletAddress !== "error") {
-      console.log("Fetching account balance...");
-      try {
-        // Create an instance of the USDC contract using ethers v6 style
-        const usdcContract = new Contract(
-          anvilConfig.SCROLL_USDC_ADDRESS,
-          anvilConfig.SCROLL_USDC_ABI,
-          provider
-        );
-        // TODO: const balanceBN = await usdcContract.balanceOf(walletAddress);
-        const balanceBN = await usdcContract.balanceOf(
-          anvilConfig.ANVIL_PRE_FUNDED_WALLET_ADDRESS
-        );
-        // USDC uses 6 decimals; format the balance accordingly.
-        const newBalance = Number(formatUnits(balanceBN, 6)) * 1000000;
-        console.log("User Account Balance:", newBalance.toFixed(2));
-        setAccountBalance(+newBalance.toFixed(2));
-      } catch (error) {
-        console.error("Error fetching balance:", error);
-        setAccountBalance(12000);
-      }
+    console.log("Smart account address in fetchAccountBalance:", smartAccountAddress);
+    if (!smartAccountAddress) {
+      console.warn("Cannot fetch account balance: Smart account address is not initialized yet");
+      return;
+    }
+    
+    console.log("Fetching account balance...");
+    try {
+      // Create an instance of the USDC contract
+      const usdcContract = new Contract(
+        MOCK_USDC_CA,
+        MOCK_USDC_ABI,
+        provider
+      );
+      const balanceBN = await usdcContract.balanceOf(smartAccountAddress);
+      const formattedBalance = Number(formatUnits(balanceBN, 6));
+      console.log("User Account Balance:", formattedBalance.toFixed(0));
+      setAccountBalance(+formattedBalance.toFixed(0));
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      setAccountBalance(12000);
     }
   }
 
+  // Fetch vault balance
   async function fetchVaultBalance() {
-    if (walletAddress !== "error") {
-      console.log("Fetching Vault Balance...");
-      try {
-        const vaultContract = new Contract(
-          COMBINED_VAULT_HIGH_RISK_CA,
-          COMBINED_VAULT_HIGH_RISK_ABI,
-          provider
-        );
+    console.log("Smart account address in fetchVaultBalance:", smartAccountAddress);
+    if (!smartAccountAddress) {
+      console.warn("Cannot fetch vault balance: Smart account address is not initialized yet");
+      return;
+    }
+    
+    console.log("Fetching Vault Balance...");
+    try {
+      const vaultContract = new Contract(
+        MOCK_COMBINED_VAULT_CA,
+        MOCK_COMBINED_VAULT_ABI,
+        provider
+      );
 
-        const rewardManagerContract = new Contract(
-          REWARD_MANAGER_CA,
-          REWARD_MANAGER_ABI,
-          provider
-        );
+      // Get user's balance in the vault
+      const vaultBalance = await vaultContract.balanceOf(smartAccountAddress);
+      // Format with correct decimals
+      const formattedBalance = Number(formatUnits(vaultBalance, 6));
+      console.log(`Vault balance: ${formattedBalance}`);
 
-        // Get user's balance in the vault
-        const vaultBalance = await vaultContract.balanceOf(
-          anvilConfig.ANVIL_PRE_FUNDED_WALLET_ADDRESS
-        );
-        // First format it with correct decimals
-        const formattedBalance = formatUnits(vaultBalance, 6);
-        console.log(`Vault balance: ${formattedBalance}`);
-
-        // Then multiply by 10^6 to get the scaled value for display
-        const displayBalance = Number(formattedBalance) * 1000000;
-        console.log(`Display vault balance: ${displayBalance}`);
-
-        // Store the multiplied value
-        setVaultBalance(displayBalance);
-      } catch (error) {
-        console.error("Error fetching vault balance:", error);
-        setVaultBalance(40000);
-      }
+      // Store the value
+      setVaultBalance(Number(formattedBalance.toFixed(0)));
+    } catch (error) {
+      console.error("Error fetching vault balance:", error);
+      setVaultBalance(40000);
     }
   }
 
-  async function refreshUserInfo() {
-    await fetchAccountBalance();
-    await fetchVaultBalance();
-  }
+  // Improved refreshUserInfo with fixed reinitialization
+async function refreshUserInfo() {
+  console.log("Refreshing user info, smart account address:", smartAccountAddress);
+  
+  // If we don't have a smart account address yet, but the account is still initializing, wait a bit
+  if (!smartAccountAddress) {
+    if (isInitializing) {
+      console.log("Smart account is currently initializing, waiting before refreshing...");
+      // Wait for 2 seconds to give initialization a chance to complete
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Check again after waiting
+      if (!smartAccountAddress) {
+        console.warn("Still no smart account address after waiting. Cannot refresh balances.");
+        return;
+      }
+    } else {
+      console.warn("Smart account not initialized and not initializing. Attempting to reinitialize...");
+      // Try to reinitialize if we're not already doing so
+      try {
+        setIsInitializing(true);
+        
+        // Create a viem wallet client using Privy's embedded wallet
+        const client = createWalletClient({
+          account: embeddedWalletAddress as `0x${string}`,
+          chain: baseSepolia,
+          transport: custom({
+            async request({ method, params }) {
+              const provider = await wallets[0].getProvider();
+              return await provider.request({ method, params });
+            },
+          }),
+        });
 
-  // Effect to update the balance when needed
-  useEffect(() => {
-    fetchAccountBalance();
-    fetchVaultBalance();
-  }, [walletAddress]);
+        // Initialize Biconomy smart account
+        const smartAccountClient = createSmartAccountClient({
+          account: await toNexusAccount({
+            signer: client,
+            chain: baseSepolia,
+            transport: http(),
+          }),
+          transport: http(env.BUNDLER_URL),
+          paymaster: createBicoPaymasterClient({
+            paymasterUrl: env.PAYMASTER_URL,
+          }),
+        });
+
+        const address = await smartAccountClient.account.getCounterFactualAddress();
+        console.log("Smart account reinitialized with address:", address);
+        
+        // Set the state values
+        setSmartAccount(smartAccountClient);
+        setSmartAccountAddress(address);
+        setIsSmartAccountReady(true);
+        
+        // IMPORTANT: Don't call the state-dependent functions immediately
+        // Instead, fetch balances directly using the address we just obtained
+        console.log("Fetching balances with newly initialized address:", address);
+        
+        // Create contracts with the provider
+        const usdcContract = new Contract(MOCK_USDC_CA, MOCK_USDC_ABI, provider);
+        const vaultContract = new Contract(MOCK_COMBINED_VAULT_CA, MOCK_COMBINED_VAULT_ABI, provider);
+        
+        // Fetch account balance directly using the address
+        try {
+          const balanceBN = await usdcContract.balanceOf(address);
+          const formattedBalance = Number(formatUnits(balanceBN, 6));
+          console.log("Reinitialized User Account Balance:", formattedBalance.toFixed(0));
+          setAccountBalance(+formattedBalance.toFixed(0));
+          
+          // Fetch vault balance directly using the address
+          const vaultBalance = await vaultContract.balanceOf(address);
+          const formattedVaultBalance = Number(formatUnits(vaultBalance, 6));
+          console.log("Reinitialized Vault Balance:", formattedVaultBalance.toFixed(0));
+          setVaultBalance(Number(formattedVaultBalance.toFixed(0)));
+          
+          console.log("Successfully refreshed balances after reinitialization");
+        } catch (error) {
+          console.error("Error fetching balances after reinitialization:", error);
+        }
+      } catch (error) {
+        console.error("Error reinitializing smart account:", error);
+      } finally {
+        setIsInitializing(false);
+      }
+      return;
+    }
+  }
+  
+  // If we have a valid address now, proceed with the refresh
+  console.log("Proceeding with balance refresh using address:", smartAccountAddress);
+  await fetchAccountBalance();
+  await fetchVaultBalance();
+  console.log("Balance refresh completed");
+}
 
   return {
     accountBalance,
@@ -279,7 +305,7 @@ export function useUserInfo() {
     name,
     username,
     email,
-    walletAddress,
+    embeddedWalletAddress,
     refreshUserInfo,
     provider,
     primaryWallet,
@@ -288,5 +314,7 @@ export function useUserInfo() {
     fetchVaultBalance,
     smartAccountAddress,
     smartAccount,
+    isSmartAccountReady,
+    isInitializing,
   };
 }

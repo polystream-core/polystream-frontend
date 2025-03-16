@@ -114,7 +114,10 @@ export default function ChatModal({ visible, onClose }: ChatModalProps) {
                     key={`msg-${msg.id || index}`}
                     riskLevel={msg.confirmationData.riskLevel}
                     amount={msg.confirmationData.amount}
-                    onConfirm={handleConfirmTransaction}
+                    onConfirm={() => {
+                      handleConfirmTransaction();
+                      onClose && onClose();
+                    }}
                     onCancel={handleCancelTransaction}
                   />
                 ) : (

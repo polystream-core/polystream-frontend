@@ -60,7 +60,7 @@ export default function StrategyDetails() {
         text1: "Staking in progress",
         text2: `Staking ${stakeAmount} tokens...`,
         position: "top",
-        visibilityTime: 10000, // Show for 10 seconds (or until replaced)
+        visibilityTime: 20000,
         props: {
           backgroundColor: "#e49b13" // Customize for orange background
         }
