@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  JsonRpcProvider,
-  Wallet,
-  Contract,
-  parseUnits,
-  formatUnits,
-} from "ethers";
+import { Wallet, Contract, parseUnits, formatUnits, ethers } from "ethers";
 import { anvilConfig } from "../configs/AnvilConfig";
 import { useUserInfo } from "./useUserInfo";
 import {
@@ -29,6 +23,11 @@ import {
   REWARD_MANAGER_CA,
 } from "../contracts/RewardManager.sol";
 import { scrollUSDCCA, scrollUSDCCABI } from "../contracts/Scroll_USDC.sol";
+import { MOCK_USDC_CA, MOCK_USDC_ABI } from "../contracts/MockUSDC.sol";
+import {
+  MOCK_COMBINED_VAULT_CA,
+  MOCK_COMBINED_VAULT_ABI,
+} from "../contracts/MockCombinedVault.sol";
 
 // Constants matching the test script
 const AAVE_PROTOCOL_ID = 1; // Assuming Constants.AAVE_PROTOCOL_ID is 1
@@ -37,7 +36,12 @@ const USDC_ADDRESS = scrollUSDCCA;
 const USDC_ATOKEN_ADDRESS = "0x1D738a3436A8C49CefFbaB7fbF04B660fb528CbD"; // Example address - replace with actual
 
 export function useTransaction() {
-  const { refreshUserInfo, setVaultBalance } = useUserInfo();
+  const {
+    refreshUserInfo,
+    setVaultBalance,
+    smartAccountAddress,
+    smartAccount,
+  } = useUserInfo();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [provider, setProvider] = useState<JsonRpcProvider | null>(null);
@@ -64,17 +68,32 @@ export function useTransaction() {
 
       try {
         // Create direct connection to Anvil
-        const localProvider = new JsonRpcProvider(anvilConfig.ANVIL_HOST_IP);
-
-        // Use the first Anvil pre-funded account private key
-        const devWallet = new Wallet(
-          anvilConfig.ANVIL_PRE_FUNDED_WALLET_PRIVATE_KEY,
-          localProvider
+        // const localProvider = new JsonRpcProvider(anvilConfig.ANVIL_HOST_IP);
+        const baseSepoliaProvider = new ethers.JsonRpcProvider(
+          "https://sepolia.base.org",
+          {
+            chainId: 84532,
+            name: "Base Sepolia",
+          }
         );
 
-        console.log("Initialized wallet:", devWallet.address);
-        setProvider(localProvider);
-        setSigner(devWallet);
+        // Wait for the provider to connect
+        await baseSepoliaProvider.ready;
+        console.log(
+          "Provider connected to network:",
+          await baseSepoliaProvider.getNetwork()
+        );
+        // Use the first Anvil pre-funded account private key
+        // const devWallet = new Wallet(
+        //   anvilConfig.ANVIL_PRE_FUNDED_WALLET_PRIVATE_KEY,
+        //   localProvider
+        // );
+
+        // const devWallet = new Wallet(smartAccountAddress, baseSepoliaProvider);
+
+        // console.log("Initialized wallet:", devWallet.address);
+        setProvider(baseSepoliaProvider);
+        // setSigner(devWallet);
         setIsInitialized(true);
       } catch (error) {
         console.error("Error initializing wallet:", error);
@@ -91,24 +110,22 @@ export function useTransaction() {
 
       try {
         // Initialize USDC contract
-        const usdc = new Contract(USDC_ADDRESS, scrollUSDCCABI, signer);
+        // const usdc = new Contract(USDC_ADDRESS, scrollUSDCCABI, signer);
+        const usdc = new Contract(MOCK_USDC_CA, MOCK_USDC_ABI, provider);
 
         // Initialize vault contracts
-        const highRiskVault = new Contract(
-          COMBINED_VAULT_HIGH_RISK_CA,
-          COMBINED_VAULT_HIGH_RISK_ABI,
+        // const highRiskVault = new Contract(
+        //   COMBINED_VAULT_HIGH_RISK_CA,
+        //   COMBINED_VAULT_HIGH_RISK_ABI,
+        //   signer
+        // );
+
+        const mockCombinedVault = new Contract(
+          MOCK_COMBINED_VAULT_CA,
+          MOCK_COMBINED_VAULT_ABI,
           signer
         );
-        const mediumRiskVault = new Contract(
-          COMBINED_VAULT_MEDIUM_RISK_CA,
-          COMBINED_VAULT_MEDIUM_RISK_ABI,
-          signer
-        );
-        const lowRiskVault = new Contract(
-          COMBINED_VAULT_LOW_RISK_CA,
-          COMBINED_VAULT_LOW_RISK_ABI,
-          signer
-        );
+
         const registryContract = new Contract(
           PROTOCOL_REGISTRY_CA,
           PROTOCOL_REGISTRY_ABI,
@@ -131,7 +148,7 @@ export function useTransaction() {
 
         // Set state
         setUsdcContract(usdc);
-        setHighRiskVaultContract(highRiskVault);
+        setHighRiskVaultContract(mockCombinedVault);
         // setMediumRiskVaultContract(mediumRiskVault);
         // setLowRiskVaultContract(lowRiskVault);
         setRegistryContract(registryContract);
@@ -318,7 +335,7 @@ export function useTransaction() {
       }
     };
 
-    runSetup();
+    // runSetup();
   }, [
     isInitialized,
     isSetupComplete,
@@ -333,74 +350,102 @@ export function useTransaction() {
   ]);
 
   async function transferWalletToVault(amount: number | undefined) {
-    if (!amount || !signer || !usdcContract || !highRiskVaultContract) {
-      console.error("Missing amount, signer, or contracts not initialized");
-      return;
-    }
+    // if (!amount || !smartAccount || !smartAccountAddress) {
+    //   console.error("Missing amount or smart account not initialized");
+    //   return;
+    // }
 
     try {
-      // Check initial balance
-      const initialBalance = await usdcContract.balanceOf(signer.address);
-      console.log(
-        `Initial wallet USDC balance: ${formatUnits(initialBalance, 6)}`
-      );
-
       console.log(`Transferring ${amount} USDC to vault...`);
 
       // Convert amount to the correct format (USDC has 6 decimals)
-      const amountInWei = amount;
+      const amountInWei = parseUnits(amount.toString(), 6);
+      console.log(`Amount in wei (scaled with 6 decimals): ${amountInWei}`);
 
-      // Check if we have enough balance
-      if (initialBalance < amountInWei) {
-        console.warn(
-          `Insufficient balance: ${formatUnits(
-            initialBalance,
-            6
-          )} USDC, trying to transfer ${amount} USDC`
-        );
-        throw new Error("Insufficient USDC balance for transfer");
-      }
+      // USDC and Vault contract addresses
+      const usdcAddress = MOCK_USDC_CA;
+      const vaultAddress = MOCK_COMBINED_VAULT_CA;
 
-      // First approve the vault to spend USDC
+      // Create the USDC approve call data
+      const usdcInterface = new ethers.Interface(MOCK_USDC_ABI);
+      const approveCalldata = usdcInterface.encodeFunctionData("approve", [
+        vaultAddress,
+        amountInWei,
+      ]);
+
+      // Create the vault deposit call data
+      const vaultInterface = new ethers.Interface(MOCK_COMBINED_VAULT_ABI);
+      const depositCalldata = vaultInterface.encodeFunctionData("deposit", [
+        smartAccountAddress,
+        amountInWei,
+      ]);
+
+      // Send the transactions through the smart account
       console.log("Approving USDC spending...");
-      const approveTx = await usdcContract.approve(
-        highRiskVaultContract.target,
-        amountInWei
-      );
-      await approveTx.wait();
-      console.log("Approval successful");
+      const approveUserOpResponse = await smartAccount.sendTransaction({
+        to: usdcAddress,
+        data: approveCalldata,
+      });
+
+      // Get the transaction hash and wait for it to be mined
+      console.log("Approval transaction hash:", approveUserOpResponse.hash);
+      console.log("Waiting for approval transaction to be mined...");
+
+      // // Wait for transaction to be included in a block
+      // const approveReceipt = await smartAccount.waitForUserOperationTransaction(
+      //   {
+      //     hash: approveUserOpResponse.hash,
+      //   }
+      // );
+      console.log("Approval successful. Receipt:");
 
       // Now deposit into the vault
       console.log("Depositing into vault...");
-      const depositTx = await highRiskVaultContract.deposit(
-        signer.address,
-        amountInWei
+      const depositUserOp = await smartAccount.sendTransaction({
+        to: vaultAddress,
+        data: depositCalldata,
+      });
+
+      // Wait for the deposit transaction to be mined
+      // const depositReceipt = await depositUserOp.wait();
+      console.log(
+        "Deposit successful. Transaction hash:",
+        // depositReceipt.transactionHash
       );
-      await depositTx.wait();
-      console.log("Deposit successful");
 
-      // Check final balance after transfer
-      const finalBalance = await usdcContract.balanceOf(signer.address);
-      console.log(`Final wallet USDC balance: ${formatUnits(finalBalance, 6)}`);
-
-      // Verify vault balance if possible
+      // Verify vault balance
       try {
-        const vaultBalance = await highRiskVaultContract.balanceOf(
-          signer.address
+        // Use a read-only provider to check balances
+        const provider = new ethers.JsonRpcProvider(
+          "https://sepolia.base.org",
+          {
+            chainId: 84532,
+            name: "Base Sepolia",
+          }
         );
-        // First format it with correct decimals
+
+        // Check USDC balance
+        const usdc = new ethers.Contract(usdcAddress, MOCK_USDC_ABI, provider);
+        const finalBalance = await usdc.balanceOf(smartAccountAddress);
+        console.log(
+          `Final wallet USDC balance: ${formatUnits(finalBalance, 6)}`
+        );
+
+        // Check vault balance
+        const vault = new ethers.Contract(
+          vaultAddress,
+          MOCK_COMBINED_VAULT_ABI,
+          provider
+        );
+        const vaultBalance = await vault.balanceOf(smartAccountAddress);
         const formattedBalance = formatUnits(vaultBalance, 6);
         console.log(`Vault balance: ${formattedBalance}`);
 
-        // Then multiply by 10^6 to get the scaled value for display
-        const displayBalance = Number(formattedBalance) * 1000000;
-        console.log(`Display vault balance: ${displayBalance}`);
-        
-        // Store the multiplied value
         // setVaultBalance(displayBalance);
       } catch (e) {
-        console.log("Could not retrieve vault balance");
+        console.log("Could not retrieve balances:", e);
       }
+
       // Refresh user info after successful deposit
       await refreshUserInfo();
 
@@ -412,76 +457,74 @@ export function useTransaction() {
   }
 
   async function transferVaultToWallet(amount: number | undefined) {
-    if (!amount || !signer || !highRiskVaultContract) {
-      console.error("Missing amount, signer, or contracts not initialized");
+    if (!amount || !smartAccount || !smartAccountAddress) {
+      console.error("Missing amount or smart account not initialized");
       return;
     }
-
+  
     try {
       console.log(`Withdrawing ${amount} shares from vault...`);
-
-      // First, we need to scale down our amount by 10^6 since it was multiplied for display
-      const actualAmount = amount / 1000000;
-      console.log(`Scaled down to: ${actualAmount}`);
-
-      // Convert actual amount to blockchain format using parseUnits
-      const amountInWei = parseUnits(actualAmount.toString(), 6);
-
-      // Now withdraw from the vault
-      const withdrawTx = await highRiskVaultContract.withdraw(
-        signer.address,
+  
+      // Convert amount to the correct format (USDC has 6 decimals)
+      const amountInWei = parseUnits(amount.toString(), 6);
+      console.log(`Amount in wei (scaled with 6 decimals): ${amountInWei}`);
+  
+      // Vault contract address
+      const vaultAddress = MOCK_COMBINED_VAULT_CA;
+  
+      // Create the vault withdraw call data
+      const vaultInterface = new ethers.Interface(MOCK_COMBINED_VAULT_ABI);
+      const withdrawCalldata = vaultInterface.encodeFunctionData("withdraw", [
+        smartAccountAddress,
         amountInWei
-      );
-      await withdrawTx.wait();
-      console.log("Withdrawal successful");
-
+      ]);
+  
+      // Send the transaction through the smart account
+      console.log("Withdrawing from vault...");
+      const withdrawUserOpResponse = await smartAccount.sendTransaction({
+        to: vaultAddress,
+        data: withdrawCalldata,
+      });
+      
+      // Get the transaction hash and wait for it to be mined
+      // console.log("Withdrawal transaction hash:", withdrawUserOpResponse.hash);
+      console.log("Waiting for withdrawal transaction to be mined...");
+      
+      // Wait for transaction to be included in a block
+      // const withdrawReceipt = await smartAccount.waitForUserOperationTransaction({
+      //   hash: withdrawUserOpResponse.hash,
+      // });
+      console.log("Withdrawal successful. Receipt:");
+  
+      // Verify balances after withdrawal
+      try {
+        // Use a read-only provider to check balances
+        const provider = new ethers.JsonRpcProvider("https://sepolia.base.org", {
+          chainId: 84532,
+          name: "Base Sepolia",
+        });
+        
+        // Check USDC balance
+        const usdc = new ethers.Contract(MOCK_USDC_CA, MOCK_USDC_ABI, provider);
+        const finalBalance = await usdc.balanceOf(smartAccountAddress);
+        console.log(`Final wallet USDC balance: ${formatUnits(finalBalance, 6)}`);
+  
+        // Check vault balance
+        const vault = new ethers.Contract(vaultAddress, MOCK_COMBINED_VAULT_ABI, provider);
+        const vaultBalance = await vault.balanceOf(smartAccountAddress);
+        const formattedBalance = formatUnits(vaultBalance, 6);
+        console.log(`Vault balance: ${formattedBalance}`);
+      } catch (e) {
+        console.log("Could not retrieve balances:", e);
+      }
+      
       // Refresh user info after successful withdrawal
       await refreshUserInfo();
-
+  
       return true;
     } catch (error) {
       console.error("Error transferring from vault:", error);
       throw error;
-    }
-  }
-
-  async function advanceTime(days: number) {
-    if (!provider) {
-      console.error("Provider not initialized");
-      return;
-    }
-
-    try {
-      console.log(`Advancing time by ${days} days...`);
-
-      // Calculate seconds from days
-      const seconds = days * 24 * 60 * 60;
-
-      // Use the evm_increaseTime JSON-RPC method to advance time
-      await provider.send("evm_increaseTime", [seconds]);
-
-      // Mine a new block to apply the time change
-      await provider.send("evm_mine", []);
-
-      console.log(`Time advanced by ${days} days`);
-
-      // Optionally check current block timestamp
-      const blockNumber = await provider.getBlockNumber();
-      const block = await provider.getBlock(blockNumber);
-
-      // Add null check before accessing timestamp
-      if (block) {
-        console.log(
-          `Current block timestamp: ${new Date(Number(block.timestamp) * 1000)}`
-        );
-      } else {
-        console.log("Block information not available");
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error advancing time:", error);
-      return false;
     }
   }
 
@@ -548,7 +591,7 @@ export function useTransaction() {
     transferVaultToWallet,
     isInitialized,
     isSetupComplete,
-    advanceTime,
+    // advanceTime,
     harvestRewards,
   };
 }

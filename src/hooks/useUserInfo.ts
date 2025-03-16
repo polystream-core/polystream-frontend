@@ -1,13 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { PillStatus } from "@/src/components/Pill";
 import {
   getAllUserEmbeddedEthereumWallets,
   useEmbeddedEthereumWallet,
   usePrivy,
 } from "@privy-io/expo";
-import { toNexusAccount, createBicoPaymasterClient, createSmartAccountClient } from "@biconomy/abstractjs";
+import {
+  toNexusAccount,
+  createBicoPaymasterClient,
+  createSmartAccountClient,
+} from "@biconomy/abstractjs";
 import { EtherscanService } from "@/src/services/etherscan";
-import { JsonRpcProvider, Contract, formatUnits } from "ethers";
+import { Contract, formatUnits, ethers } from "ethers";
 import { anvilConfig } from "../configs/AnvilConfig";
 import {
   COMBINED_VAULT_HIGH_RISK_ABI,
@@ -26,6 +30,10 @@ import {
   parseEther,
   parseGwei,
 } from "viem";
+import {
+  MOCK_COMBINED_VAULT_ABI,
+  MOCK_COMBINED_VAULT_CA,
+} from "../contracts/MockCombinedVault.sol";
 import { baseSepolia } from "viem/chains";
 import { env } from "../constants/AppConfig";
 
@@ -62,10 +70,15 @@ export function useUserInfo() {
   const primaryWallet = embeddedWallets.find(
     (wallet) => wallet.wallet_index === 0
   );
-  const provider = new JsonRpcProvider(anvilConfig.ANVIL_HOST_IP, {
-    chainId: 6666,
-    name: "anvil",
+  // const provider = new JsonRpcProvider(anvilConfig.ANVIL_HOST_IP, {
+  //   chainId: 6666,
+  //   name: "anvil",
+  // });
+  const provider = new ethers.JsonRpcProvider("https://sepolia.base.org", {
+    chainId: 84532,
+    name: "Base Sepolia",
   });
+  const hasExecutedTx = useRef(false);
 
   const initSmartAccount = useCallback(async () => {
     if (!wallets?.[0] || walletAddress === "error") return;
@@ -96,13 +109,14 @@ export function useUserInfo() {
           transport: http(),
         }),
         transport: http(env.BUNDLER_URL), // Full URL
-        paymaster: createBicoPaymasterClient({ 
-          paymasterUrl: env.PAYMASTER_URL // Full URL
+        paymaster: createBicoPaymasterClient({
+          paymasterUrl: env.PAYMASTER_URL, // Full URL
         }),
       });
 
       // Get and store the smart account address
-      const address = await smartAccountClient.account.getCounterFactualAddress();
+      const address =
+        await smartAccountClient.account.getCounterFactualAddress();
 
       console.log("Smart account address: ", address);
 
@@ -116,10 +130,18 @@ export function useUserInfo() {
   }, [wallets, walletAddress]);
 
   useEffect(() => {
-    if (isSmartAccountReady && smartAccountAddress && smartAccount) {
+    if (
+      isSmartAccountReady &&
+      smartAccountAddress &&
+      smartAccount &&
+      !hasExecutedTx.current
+    ) {
+      // Set the ref to true to prevent future executions
+      hasExecutedTx.current = true;
+
       // send gasless transaction
       try {
-        console.log("Smart account:", smartAccount);
+        // console.log("Smart account:", smartAccount);
         console.log("Smart account address:", smartAccountAddress);
         console.log("Is smart account ready:", isSmartAccountReady);
         sendTestTransaction();
@@ -136,11 +158,11 @@ export function useUserInfo() {
       console.error("Smart account not ready");
       return null;
     }
-    
+
     try {
       // Send to a different address, not to itself
       const testAddress = "0x000000000000000000000000000000000000dEaD"; // Use a burn address for testing
-      
+
       // Send a minimal ETH transfer (proper data format for simple transfer)
       const transactionResponse = await smartAccount.sendTransaction({
         calls: [
@@ -149,12 +171,12 @@ export function useUserInfo() {
             data: "0x", // Empty data for ETH transfer
             value: 1n, // Minimal value (1 wei)
           },
-        ]
+        ],
       });
-      
-      const { transactionHash } = await transactionResponse.waitForTxHash();
-      console.log("Test transaction hash:", transactionHash);
-      return transactionHash;
+
+      await smartAccount.waitForTransactionReceipt({
+        hash: transactionResponse,
+      });
     } catch (error) {
       console.error("Error sending test transaction:", error);
       return null;
@@ -264,5 +286,7 @@ export function useUserInfo() {
     isReady,
     fetchAccountBalance,
     fetchVaultBalance,
+    smartAccountAddress,
+    smartAccount,
   };
 }

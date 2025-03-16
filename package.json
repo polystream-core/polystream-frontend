@@ -15,6 +15,7 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@biconomy/abstractjs": "latest",
     "@biconomy/account": "^4.5.7",
     "@biconomy/bundler": "^3.1.4",
     "@biconomy/common": "^3.1.4",
