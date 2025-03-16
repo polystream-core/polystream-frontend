@@ -10,7 +10,7 @@ import {
   createBicoPaymasterClient,
   createSmartAccountClient,
 } from "@biconomy/abstractjs";
-import { Contract, formatUnits, ethers } from "ethers";
+import { Contract, formatUnits, ethers, N } from "ethers";
 import { createWalletClient, http, custom } from "viem";
 import {
   MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI,
@@ -33,6 +33,10 @@ export function useUserInfo() {
   const [accountApy, setAccountApy] = useState<number>(-0.03);
   const [accountStatus, setAccountStatus] = useState<PillStatus>("active");
   const [vaultBalance, setVaultBalance] = useState<number>(0);
+  const [mediumRiskVaultBalance, setMediumRiskVaultBalance] =
+    useState<number>(0);
+  const [highRiskVaultBalance, setHighRiskVaultBalance] = useState<number>(0);
+
   const [vaultApy, setVaultApy] = useState<number>(69.2);
   const [vaultStatus, setVaultStatus] = useState<PillStatus>("active");
   const totalBalance = Number(accountBalance + vaultBalance).toFixed(0);
@@ -62,9 +66,14 @@ export function useUserInfo() {
 
     // Create contracts with the provider
     const usdcContract = new Contract(MOCK_USDC_CA, MOCK_USDC_ABI, provider);
-    const vaultContract = new Contract(
+    const mediumRiskVaultContract = new Contract(
       MOCK_COMBINED_MEDIUM_RISK_VAULT_CA,
       MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI,
+      provider
+    );
+    const highRiskVaultContract = new Contract(
+      MOCK_COMBINED_HIGH_RISK_VAULT_CA,
+      MOCK_COMBINED_HIGH_RISK_VAULT_ABI,
       provider
     );
 
@@ -75,10 +84,17 @@ export function useUserInfo() {
     setAccountBalance(+formattedBalance.toFixed(0));
 
     // Fetch vault balance
-    const vaultBalance = await vaultContract.balanceOf(address);
-    const formattedVaultBalance = Number(formatUnits(vaultBalance, 6));
-    console.log("Initial Vault Balance:", formattedVaultBalance.toFixed(0));
-    setVaultBalance(Number(formattedVaultBalance.toFixed(0)));
+    const mediumRiskVaultBalance = await mediumRiskVaultContract.balanceOf(address);
+    const mediumRiskFormattedVaultBalance = Number(formatUnits(mediumRiskVaultBalance, 6));
+    console.log("Initial Medium Risk Vault Balance:", mediumRiskFormattedVaultBalance.toFixed(0));
+
+    const highRiskVaultBalance = await highRiskVaultContract.balanceOf(address);
+    const highRiskFormattedVaultBalance = Number(formatUnits(highRiskVaultBalance, 6));
+    console.log("Initial High Risk Vault Balance:", highRiskFormattedVaultBalance.toFixed(0));
+
+    setVaultBalance(Number(mediumRiskFormattedVaultBalance.toFixed(0)) + Number(highRiskFormattedVaultBalance.toFixed(0)));
+    setMediumRiskVaultBalance(Number(mediumRiskFormattedVaultBalance.toFixed(0)));
+    setHighRiskVaultBalance(Number(highRiskFormattedVaultBalance.toFixed(0)));
   }
 
   // Initialize smart account
@@ -218,6 +234,8 @@ export function useUserInfo() {
         Number(highRiskFormattedBalance.toFixed(0)) +
           Number(mediumRiskFormattedBalance.toFixed(0))
       );
+      setMediumRiskVaultBalance(Number(mediumRiskFormattedBalance.toFixed(0)));
+      setHighRiskVaultBalance(Number(highRiskFormattedBalance.toFixed(0)));
     } catch (error) {
       console.error("Error fetching vault balance:", error);
       setVaultBalance(40000);
@@ -347,6 +365,12 @@ export function useUserInfo() {
               Number(mediumRiskFormattedVaultBalance.toFixed(0)) +
                 Number(highRiskFormattedVaultBalance.toFixed(0))
             );
+            setMediumRiskVaultBalance(
+              Number(mediumRiskFormattedVaultBalance.toFixed(0))
+            );
+            setHighRiskVaultBalance(
+              Number(highRiskFormattedVaultBalance.toFixed(0))
+            );
 
             console.log(
               "Successfully refreshed balances after reinitialization"
@@ -376,6 +400,11 @@ export function useUserInfo() {
     console.log("Balance refresh completed");
   }
 
+   useEffect(() => {
+      console.log("Medium risk balance in useUserInfo:", mediumRiskVaultBalance);
+      console.log("High risk balance in useUserInfo:", highRiskVaultBalance);
+    }, [mediumRiskVaultBalance, highRiskVaultBalance]);
+
   return {
     accountBalance,
     accountApy,
@@ -403,5 +432,7 @@ export function useUserInfo() {
     smartAccount,
     isSmartAccountReady,
     isInitializing,
+    mediumRiskVaultBalance,
+    highRiskVaultBalance,
   };
 }

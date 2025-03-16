@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -25,7 +25,13 @@ import WithdrawModal from "@/src/components/modals/WithdrawModal";
 import Toast from "react-native-toast-message";
 
 export default function PolystreamVaultPage() {
-  const { vaultApy, vaultBalance, vaultStatus, refreshUserInfo } = useUserInfo();
+  const {
+    vaultApy,
+    vaultBalance,
+    vaultStatus,
+    mediumRiskVaultBalance,
+    highRiskVaultBalance,
+  } = useUserInfo();
   const { transferVaultToWallet } = useTransaction();
   const vaultCurrency = "USD";
   const [showStats, setShowStats] = useState(false);
@@ -43,7 +49,7 @@ export default function PolystreamVaultPage() {
     {
       id: 1,
       name: "Conservative Yield Vault",
-      balance: (vaultBalance * 0.10).toFixed(0),
+      balance: (vaultBalance * 0.1).toFixed(0),
       apy: "3.50%",
       risk: "Low Risk",
       imageKey: "green_crystal",
@@ -51,7 +57,7 @@ export default function PolystreamVaultPage() {
     {
       id: 2,
       name: "Balanced Growth Vault",
-      balance: (vaultBalance * 0.30).toFixed(0),
+      balance: mediumRiskVaultBalance,
       apy: "3000%",
       risk: "Medium Risk",
       imageKey: "yellow_crystal",
@@ -59,7 +65,7 @@ export default function PolystreamVaultPage() {
     {
       id: 3,
       name: "Alpha Seeker Vault",
-      balance:( vaultBalance * 0.60).toFixed(0),
+      balance: highRiskVaultBalance,
       apy: "10000%",
       risk: "High Risk",
       imageKey: "red_crystal",
@@ -78,10 +84,10 @@ export default function PolystreamVaultPage() {
 
   const handleWithdrawConfirm = async (amount: number) => {
     if (!selectedVault) return;
-  
+
     // Get vault name for toast messages
     const vaultName = selectedVault.name;
-    
+
     // Show initial withdrawal toast notification
     Toast.show({
       type: "info",
@@ -90,17 +96,17 @@ export default function PolystreamVaultPage() {
       position: "top",
       visibilityTime: 20000, // Long duration as the transaction might take time
       props: {
-        backgroundColor: "#e49b13" // Orange background for in-progress
-      }
+        backgroundColor: "#e49b13", // Orange background for in-progress
+      },
     });
-    
+
     // Navigate to portfolio immediately
     router.push("/portfolio");
     setWithdrawModalVisible(false);
     try {
       // Execute the withdrawal transaction
       await transferVaultToWallet(amount);
-      
+
       // Show success toast when transaction completes
       Toast.show({
         type: "success",
@@ -109,16 +115,15 @@ export default function PolystreamVaultPage() {
         position: "top",
         visibilityTime: 6000, // Show for 6 seconds
         props: {
-          backgroundColor: colors.green.primary // Green background
-        }
+          backgroundColor: colors.green.primary, // Green background
+        },
       });
-      
+
       // Refresh balances
       // await refreshUserInfo();
-      
     } catch (error) {
       console.error("Error during withdrawal process:", error);
-      
+
       // Show error toast when transaction fails
       Toast.show({
         type: "error",
@@ -127,14 +132,19 @@ export default function PolystreamVaultPage() {
         position: "top",
         visibilityTime: 6000, // Show for 6 seconds
         props: {
-          backgroundColor: colors.red.primary // Red background
-        }
+          backgroundColor: colors.red.primary, // Red background
+        },
       });
     } finally {
       // Close the modal
       setWithdrawModalVisible(false);
     }
   };
+
+  useEffect(() => {
+    console.log("Medium risk balance in vault:", mediumRiskVaultBalance);
+    console.log("High risk balance in vault:", highRiskVaultBalance);
+  }, [mediumRiskVaultBalance, highRiskVaultBalance]);
 
   return (
     <View style={styles.container}>
@@ -272,7 +282,7 @@ export default function PolystreamVaultPage() {
                     <Text style={styles.detailLabel}>Balance</Text>
                     <View style={styles.vaultItemBalanceRow}>
                       <Text style={styles.vaultItemBalanceValue}>
-                        {formatNumberWithCommas(vault.balance)}
+                        {vault.balance}
                       </Text>
                       <Text style={styles.vaultItemBalanceCurrency}>
                         {vaultCurrency}
