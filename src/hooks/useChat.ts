@@ -188,9 +188,18 @@ export function useChat() {
     // Navigate to portfolio page immediately
     router.push("/portfolio");
 
+    let riskNumber = 0;
+    if (riskLevel == "low") {
+      riskNumber = 1;
+    } else if (riskLevel == "medium") {
+      riskNumber = 2;
+    } else {
+      riskNumber = 3;
+    }
+
     try {
       // Execute the transaction
-      await transferWalletToVault(amount);
+      await transferWalletToVault(amount, riskNumber);
 
       // Show success toast when transaction completes
       Toast.show({

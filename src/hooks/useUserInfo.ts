@@ -43,11 +43,11 @@ export function useUserInfo() {
   const [vaultStatus, setVaultStatus] = useState<PillStatus>("active");
   const totalBalance = Number(accountBalance + vaultBalance).toFixed(0);
 
-  const [name, setName] = useState<string>("Chee Heng");
-  const [username, setUsername] = useState<string>("cheeheng10");
-  const [email, setEmail] = useState<string>("example@scroll.com");
+  const [name, setName] = useState<string>("yangdingcheok");
+  const [username, setUsername] = useState<string>("yangdingcheok");
+  const [email, setEmail] = useState<string>("yangdingcheok@gmail.com");
   const [smartAccount, setSmartAccount] = useState(null);
-  const [smartAccountAddress, setSmartAccountAddress] = useState("");
+  const [smartAccountAddress, setSmartAccountAddress] = useState("0xB2e22B21892b346de6CeA9f7Ce65FA8F1c795A1A");
   const [isSmartAccountReady, setIsSmartAccountReady] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const embeddedWallets = isReady

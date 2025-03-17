@@ -1,4 +1,4 @@
-import { View, Image, Text, StyleSheet, Pressable } from "react-native";
+import { View, Image, Text, StyleSheet, Pressable, TouchableOpacity } from "react-native";
 import { colors } from "../constants/Colors";
 import { images } from "../constants/Images";
 import { fonts } from "../constants/Fonts";
@@ -54,14 +54,14 @@ export default function ActionBar({ actions = [
     return (
         <View style={styles.actionContainer}>
             {actions.map((action, index) => (
-                <Pressable key={`action-${index}`} onPress={action.onPress} style={styles.childAction}>
+                <TouchableOpacity key={`action-${index}`} onPress={action.onPress} style={styles.childAction}>
                     <Image
                         source={action.icon}
                         style={styles.actionIcon}
                         resizeMode="contain"
                     />
                     <Text style={styles.actionText}>{action.label}</Text>
-                </Pressable>
+                </TouchableOpacity>
             ))}
         </View>
     );

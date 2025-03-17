@@ -11,9 +11,11 @@ export function createTransakConfig(walletAddress : string, configOverrides: Rec
     walletAddress: walletAddress,
     fiatCurrency: "USD",
     defaultCryptoCurrency: "USDC",
+    defaultFiatAmount: 3000,
     themeColor: colors.beige.color01,
     exchangeScreenTitle: "PolyStream - Top Up",
-    // disableWalletAddressForm: true,
+    defaultNetwork: "base",
+    disableWalletAddressForm: true,
     email: "",
     ...configOverrides
   };

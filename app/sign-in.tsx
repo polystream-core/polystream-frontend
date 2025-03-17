@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, Image } from "react-native";
+import { View, Text, StyleSheet, Pressable, Image, TouchableOpacity } from "react-native";
 import { fonts } from "@/src/constants/Fonts";
 import { colors } from "@/src/constants/Colors";
 import CustomButton from "@/src/components/buttons/CustomButton";
@@ -48,9 +48,9 @@ export default function SignInPage() {
             <Text style={styles.subtitle}>
                 Optimize Your Crypto Earnings with Smart Yield Strategies. Zero Knowledge Required.
             </Text>
-            <Pressable onPress={signInAction}>
+            <TouchableOpacity onPress={signInAction}>
                 <CustomButton title="Sign in" />
-            </Pressable>
+            </TouchableOpacity>
             <View style={styles.horiContainer}>
                 <Circle size={10} color={colors.cyan.color02} style={{ margin: 4 }} />
                 <Text style={styles.footnote}>
