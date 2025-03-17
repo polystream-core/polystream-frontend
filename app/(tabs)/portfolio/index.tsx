@@ -273,12 +273,12 @@ function PortfolioScreen() {
         />
 
         {/* Toggle container for yield simulation */}
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={styles.toggleContainer} 
           onPress={toggleYieldSimulation}
         >
           <Text style={styles.toggleTitle}>Yield Simulation</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
       </ScrollView>
 
