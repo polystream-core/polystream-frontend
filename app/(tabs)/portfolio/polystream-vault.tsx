@@ -42,6 +42,7 @@ export default function PolystreamVaultPage() {
     name: string;
     balance: number;
     imageKey: string;
+    risk: string;
   }>(null);
 
   // Mock data for individual vaults
@@ -76,6 +77,7 @@ export default function PolystreamVaultPage() {
     id: number;
     name: string;
     balance: number;
+    risk: string;
     imageKey: string;
   }) => {
     setSelectedVault(vault);
@@ -87,6 +89,26 @@ export default function PolystreamVaultPage() {
 
     // Get vault name for toast messages
     const vaultName = selectedVault.name;
+
+    // Extract the risk level from the vault
+    // First, check if risk is defined in the selectedVault
+    let riskLevel = 1; // Default to low risk
+
+    if ("risk" in selectedVault && typeof selectedVault.risk === "string") {
+      const riskString = selectedVault.risk.toLowerCase();
+      if (riskString.includes("low")) {
+        riskLevel = 1;
+      } else if (riskString.includes("medium")) {
+        riskLevel = 2;
+      } else if (riskString.includes("high")) {
+        riskLevel = 3;
+      }
+    } else {
+      // Fallback to determine risk level by vault ID
+      riskLevel = selectedVault.id;
+    }
+
+    console.log(`Withdrawing from vault with risk level: ${riskLevel}`);
 
     // Show initial withdrawal toast notification
     Toast.show({
@@ -103,9 +125,10 @@ export default function PolystreamVaultPage() {
     // Navigate to portfolio immediately
     router.push("/portfolio");
     setWithdrawModalVisible(false);
+
     try {
-      // Execute the withdrawal transaction
-      await transferVaultToWallet(amount);
+      // Execute the withdrawal transaction with the risk level
+      await transferVaultToWallet(amount, riskLevel);
 
       // Show success toast when transaction completes
       Toast.show({

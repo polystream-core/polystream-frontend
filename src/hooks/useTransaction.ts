@@ -150,33 +150,45 @@ export function useTransaction() {
     }
   }
 
-  async function transferVaultToWallet(amount: number | undefined) {
+  async function transferVaultToWallet(
+    amount: number | undefined,
+    riskLevel: number
+  ) {
     if (!amount || !smartAccount || !smartAccountAddress) {
       console.error("Missing amount or smart account not initialized");
       return;
     }
 
     try {
-      console.log(`Withdrawing ${amount} shares from vault...`);
+      console.log(
+        `Withdrawing ${amount} shares from vault with risk level ${riskLevel}...`
+      );
 
       // Convert amount to the correct format (USDC has 6 decimals)
       const amountInWei = parseUnits(amount.toString(), 6);
       console.log(`Amount in wei (scaled with 6 decimals): ${amountInWei}`);
 
-      // Vault contract address
-      const vaultAddress = MOCK_COMBINED_MEDIUM_RISK_VAULT_CA;
+      // Determine vault address and ABI based on risk level
+      let vaultAddress: string;
+      let vaultABI: any;
+
+      if (riskLevel === 3) {
+        vaultAddress = MOCK_COMBINED_HIGH_RISK_VAULT_CA;
+        vaultABI = MOCK_COMBINED_HIGH_RISK_VAULT_ABI;
+      } else {
+        vaultAddress = MOCK_COMBINED_MEDIUM_RISK_VAULT_CA;
+        vaultABI = MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI;
+      }
 
       // Create the vault withdraw call data
-      const vaultInterface = new ethers.Interface(
-        MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI
-      );
+      const vaultInterface = new ethers.Interface(vaultABI);
       const withdrawCalldata = vaultInterface.encodeFunctionData("withdraw", [
         smartAccountAddress,
         amountInWei,
       ]);
 
       // Send the transaction through the smart account
-      console.log("Withdrawing from vault...");
+      console.log(`Withdrawing from ${riskLevel} risk vault...`);
       const withdrawUserOpResponse = await smartAccount.sendTransaction({
         to: vaultAddress,
         data: withdrawCalldata,
@@ -184,10 +196,20 @@ export function useTransaction() {
 
       // Get the transaction hash and wait for it to be mined
       console.log("Waiting for withdrawal transaction to be mined...");
-      console.log("Withdrawal successful");
+
+      console.log("Withdrawal successful. Receipt:");
 
       // Verify balances after withdrawal
       try {
+        // Use a read-only provider to check balances
+        const provider = new ethers.JsonRpcProvider(
+          "https://sepolia.base.org",
+          {
+            chainId: 84532,
+            name: "Base Sepolia",
+          }
+        );
+
         // Check USDC balance
         const usdc = new ethers.Contract(MOCK_USDC_CA, MOCK_USDC_ABI, provider);
         const finalBalance = await usdc.balanceOf(smartAccountAddress);
@@ -196,11 +218,7 @@ export function useTransaction() {
         );
 
         // Check vault balance
-        const vault = new ethers.Contract(
-          vaultAddress,
-          MOCK_COMBINED_HIGH_RISK_VAULT_ABI,
-          provider
-        );
+        const vault = new ethers.Contract(vaultAddress, vaultABI, provider);
         const vaultBalance = await vault.balanceOf(smartAccountAddress);
         const formattedBalance = formatUnits(vaultBalance, 6);
         console.log(`Vault balance: ${formattedBalance}`);
@@ -213,7 +231,7 @@ export function useTransaction() {
 
       return true;
     } catch (error) {
-      console.error("Error transferring from vault:", error);
+      console.error("Error withdrawing from vault:", error);
       throw error;
     }
   }
