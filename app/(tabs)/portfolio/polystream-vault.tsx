@@ -50,7 +50,7 @@ export default function PolystreamVaultPage() {
     {
       id: 1,
       name: "Conservative Yield Vault",
-      balance: (vaultBalance * 0.1).toFixed(0),
+      balance: 0,
       apy: "3.50%",
       risk: "Low Risk",
       imageKey: "green_crystal",
