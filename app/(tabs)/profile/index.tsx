@@ -8,7 +8,7 @@ import Pill from '@/src/components/Pill';
 import { usePrivy } from '@privy-io/expo';
 
 export default function Tab() {
-  const {name, username, email, walletAddress} = useUserInfo();
+  const {name, username, email, embeddedWalletAddress} = useUserInfo();
   const { logout } = usePrivy();
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [logoutExpanded, setLogoutExpanded] = useState(false);
@@ -101,9 +101,9 @@ export default function Tab() {
               <Text style={styles.detailLabelText}>Wallet Address</Text>
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailValueText}>{truncateWalletAddress(walletAddress)}</Text>
+              <Text style={styles.detailValueText}>{truncateWalletAddress(embeddedWalletAddress)}</Text>
               <TouchableOpacity
-                onPress={() => copyToClipboard(walletAddress, 'wallet')}
+                onPress={() => copyToClipboard(embeddedWalletAddress, 'wallet')}
                 style={styles.copyIconContainer}
               >
                 {copiedText === 'wallet' ? (

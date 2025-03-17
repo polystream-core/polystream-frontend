@@ -18,6 +18,7 @@ interface ColorPalette {
   cyan: ColorShades;
   black: ColorShades;
   grey: GreyShades;
+  green: ColorShades;
 }
 
 export const colors: ColorPalette = {
@@ -52,5 +53,11 @@ export const colors: ColorPalette = {
     color03: '#DADADA',
     color04: '#EDEDED',
     white: '#FFFFFF'
+  },
+  green: {
+    primary: '#00C853',
+    color01: '#00C853',
+    color02: '#00C853',
+    color03: '#00C853'
   }
 };

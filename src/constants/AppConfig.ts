@@ -8,6 +8,9 @@ export const env = {
     ETHERSCAN_API_KEY: Constants.expoConfig?.extra?.ETHERSCAN_API_KEY,
     ANVIL_HOST_IP: Constants.expoConfig?.extra?.ANVIL_HOST_IP,
     OPENAI_API_KEY: Constants.expoConfig?.extra?.OPENAI_API_KEY,
+    BUNDLER_URL: Constants.expoConfig?.extra?.BUNDLER_URL,
+    PAYMASTER_URL: Constants.expoConfig?.extra?.PAYMASTER_URL,
+    BASE_SEPOLIA_RPC: Constants.expoConfig?.extra?.BASE_SEPOLIA_RPC,
 }
 
 export const appConfig = {

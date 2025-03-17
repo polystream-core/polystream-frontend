@@ -51,7 +51,6 @@ export default function VaultButton(
                 </View>
                 <View style={styles.footer}>
                     <Pill status={status} />
-                    <Text style={styles.notes}>{notes}</Text>
                 </View>
             </View>
         </Pressable>

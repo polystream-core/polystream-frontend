@@ -17,6 +17,9 @@ import { fonts } from "@/src/constants/Fonts";
 import { router, useLocalSearchParams } from "expo-router";
 import { images } from "@/src/constants/Images";
 import { formatNumberWithCommas } from "@/src/utils/CustomFormatter";
+import { useTransaction } from "@/src/hooks/useTransaction";
+import { useUserInfo } from "@/src/hooks/useUserInfo";
+import Toast from "react-native-toast-message";
 
 export default function StrategyDetails() {
   // Get the parameters from the URL
@@ -26,9 +29,16 @@ export default function StrategyDetails() {
     risk = "Medium Risk",
     poolSize: poolSizeStr = "1250000",
     description = "This strategy optimizes yield by allocating funds across multiple DeFi protocols.",
-    imageKey = "yellow_crystal"
+    imageKey = "yellow_crystal",
   } = useLocalSearchParams();
-
+  const { transferWalletToVault, transferVaultToWallet } = useTransaction();
+  const {
+    accountBalance,
+    vaultBalance,
+    refreshUserInfo,
+    fetchAccountBalance,
+    fetchVaultBalance,
+  } = useUserInfo();
   const [stakeAmount, setStakeAmount] = useState("");
 
   // Convert poolSize from string to number
@@ -37,15 +47,81 @@ export default function StrategyDetails() {
   // Calculate daily yield
   const dailyYield = stakeAmount
     ? (
-      (parseFloat(stakeAmount) * (parseFloat(apy as string) / 100)) /
-      365
-    ).toFixed(2)
+        (parseFloat(stakeAmount) * (parseFloat(apy as string) / 100)) /
+        365
+      ).toFixed(2)
     : "0.00";
 
   const handleStake = () => {
-    // Implement your staking logic here
-    console.log(`Staking ${stakeAmount} in ${name}`);
-    // Navigate to confirmation page or show a success modal
+    console.log("Risk level:", risk);
+    console.log(`Staking ${stakeAmount} in ${name} with risk level: ${risk}`);
+
+    if (!stakeAmount) {
+      console.error("Please enter a valid stake amount");
+      return;
+    }
+
+    // Determine the numeric risk level from the risk string
+    let riskLevel = 1; // Default to low risk
+
+    if (typeof risk === "string") {
+      if (risk.toLowerCase().includes("low")) {
+        riskLevel = 1; // Low risk
+      } else if (risk.toLowerCase().includes("medium")) {
+        riskLevel = 2; // Medium risk
+      } else if (risk.toLowerCase().includes("high")) {
+        riskLevel = 3; // High risk
+      }
+    }
+
+    console.log(`Mapped risk level: ${riskLevel}`);
+
+    // Show initial staking toast notification
+    Toast.show({
+      type: "info",
+      text1: "Staking in progress",
+      text2: `Staking ${stakeAmount} tokens in ${risk} vault...`,
+      position: "top",
+      visibilityTime: 20000,
+      props: {
+        backgroundColor: "#e49b13",
+      },
+    });
+
+    // Start the transfer with the risk level
+    transferWalletToVault(parseFloat(stakeAmount), riskLevel)
+      .then(() => {
+        console.log("Transfer complete, refreshing user info...");
+        return Promise.all([fetchVaultBalance(), fetchAccountBalance()]);
+      })
+      .then(() => {
+        // Show success toast
+        Toast.show({
+          type: "success",
+          text1: "Staking successful",
+          text2: `Successfully staked ${stakeAmount} tokens in ${risk} vault`,
+          position: "top",
+          visibilityTime: 6000,
+          props: {
+            backgroundColor: colors.green.primary,
+          },
+        });
+      })
+      .catch((error) => {
+        console.error("Error during stake process:", error);
+        Toast.show({
+          type: "error",
+          text1: "Staking failed",
+          text2: "There was an error processing your stake",
+          position: "top",
+          visibilityTime: 6000,
+          props: {
+            backgroundColor: colors.red.primary,
+          },
+        });
+      });
+
+    // Navigate to portfolio immediately
     router.push("/portfolio");
   };
 
@@ -79,7 +155,10 @@ export default function StrategyDetails() {
             <View style={styles.cardHeader}>
               <View style={styles.crystalContainer}>
                 <Image
-                  source={images[imageKey as keyof typeof images] || images.yellow_crystal}
+                  source={
+                    images[imageKey as keyof typeof images] ||
+                    images.yellow_crystal
+                  }
                   style={styles.crystalImage}
                   resizeMode="contain"
                 />
@@ -108,9 +187,7 @@ export default function StrategyDetails() {
 
             {/* Description */}
             <Text style={styles.descriptionTitle}>Strategy Description</Text>
-            <Text style={styles.descriptionText}>
-              {description}
-            </Text>
+            <Text style={styles.descriptionText}>{description}</Text>
           </View>
 
           {/* Staking Section */}
@@ -129,7 +206,7 @@ export default function StrategyDetails() {
               />
               <TouchableOpacity
                 style={styles.maxButton}
-                onPress={() => setStakeAmount("1000")} // Example max amount
+                onPress={() => setStakeAmount(accountBalance.toString())} // Example max amount
               >
                 <Text style={styles.maxButtonText}>MAX</Text>
               </TouchableOpacity>
@@ -137,7 +214,9 @@ export default function StrategyDetails() {
 
             {/* Yield Preview */}
             <View style={styles.yieldPreviewContainer}>
-              <Text style={styles.yieldPreviewTitle}>Estimated Daily Yield</Text>
+              <Text style={styles.yieldPreviewTitle}>
+                Estimated Daily Yield
+              </Text>
               <Text style={styles.yieldPreviewValue}>${dailyYield}</Text>
             </View>
 
@@ -164,7 +243,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   stickyHeader: {
     flexDirection: "row",
@@ -175,7 +254,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.beige.color03,
     zIndex: 10,
-    position: 'relative',
+    position: "relative",
   },
   scrollContent: {
     padding: 20,
@@ -259,7 +338,7 @@ const styles = StyleSheet.create({
   statValueHighlight: {
     fontFamily: fonts.primary.bold,
     fontSize: 18,
-    color: "#00C853",
+    color: colors.green.primary,
   },
   separator: {
     height: 1,

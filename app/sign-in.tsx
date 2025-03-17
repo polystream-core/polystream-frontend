@@ -7,9 +7,11 @@ import { useLogin } from "@privy-io/expo";
 import { router } from "expo-router";
 import { useState } from "react";
 import Loading from "@/src/components/Loading";
+import { useUserInfo } from "@/src/hooks/useUserInfo";
 
 export default function SignInPage() {
     const { login } = useLogin();
+    const { setEmail } = useUserInfo();
     const [loading, setLoading] = useState(false);
 
     async function signInAction() {
