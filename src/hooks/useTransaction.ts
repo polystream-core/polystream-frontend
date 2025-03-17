@@ -14,7 +14,10 @@ import {
   MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI,
   MOCK_COMBINED_HIGH_RISK_VAULT_ABI,
   MOCK_COMBINED_HIGH_RISK_VAULT_CA,
+  MOCK_COMBINED_LOW_RISK_VAULT_ABI,
+  MOCK_COMBINED_LOW_RISK_VAULT_CA
 } from "../contracts/MockCombinedVault.sol";
+import { env } from "../constants/AppConfig";
 
 export function useTransaction() {
   const {
@@ -33,7 +36,7 @@ export function useTransaction() {
 
       try {
         const baseSepoliaProvider = new ethers.JsonRpcProvider(
-          "https://sepolia.base.org",
+          env.BASE_SEPOLIA_RPC,
           {
             chainId: 84532,
             name: "Base Sepolia",
@@ -79,9 +82,12 @@ export function useTransaction() {
       if (riskLevel === 3) {
         vaultAddress = MOCK_COMBINED_HIGH_RISK_VAULT_CA;
         vaultABI = MOCK_COMBINED_HIGH_RISK_VAULT_ABI;
-      } else {
+      } else if (riskLevel === 2) {
         vaultAddress = MOCK_COMBINED_MEDIUM_RISK_VAULT_CA;
         vaultABI = MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI;
+      } else {
+        vaultAddress = MOCK_COMBINED_LOW_RISK_VAULT_CA;
+        vaultABI = MOCK_COMBINED_LOW_RISK_VAULT_ABI;
       }
 
       // Create the USDC approve call data
@@ -175,9 +181,12 @@ export function useTransaction() {
       if (riskLevel === 3) {
         vaultAddress = MOCK_COMBINED_HIGH_RISK_VAULT_CA;
         vaultABI = MOCK_COMBINED_HIGH_RISK_VAULT_ABI;
-      } else {
+      } else if (riskLevel === 2) {
         vaultAddress = MOCK_COMBINED_MEDIUM_RISK_VAULT_CA;
         vaultABI = MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI;
+      } else {
+        vaultAddress = MOCK_COMBINED_LOW_RISK_VAULT_CA;
+        vaultABI = MOCK_COMBINED_LOW_RISK_VAULT_ABI;
       }
 
       // Create the vault withdraw call data

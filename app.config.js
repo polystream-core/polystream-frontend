@@ -48,6 +48,7 @@ export default {
             OPENAI_API_KEY: process.env.OPENAI_API_KEY,
             PAYMASTER_URL: process.env.PAYMASTER_URL,
             BUNDLER_URL: process.env.BUNDLER_URL,
+            BASE_SEPOLIA_RPC: process.env.BASE_SEPOLIA_RPC,
         }
     }
 };

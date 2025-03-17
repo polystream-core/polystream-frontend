@@ -23,15 +23,18 @@ import { useTransaction } from "@/src/hooks/useTransaction";
 import { router } from "expo-router";
 import WithdrawModal from "@/src/components/modals/WithdrawModal";
 import Toast from "react-native-toast-message";
+import { useApy } from "@/src/hooks/useApy";
 
 export default function PolystreamVaultPage() {
   const {
     vaultApy,
     vaultBalance,
     vaultStatus,
+    lowRiskVaultBalance,
     mediumRiskVaultBalance,
     highRiskVaultBalance,
   } = useUserInfo();
+  const { lowRiskApy, mediumRiskApy, highRiskApy } = useApy();
   const { transferVaultToWallet } = useTransaction();
   const vaultCurrency = "USD";
   const [showStats, setShowStats] = useState(false);
@@ -50,8 +53,8 @@ export default function PolystreamVaultPage() {
     {
       id: 1,
       name: "Conservative Yield Vault",
-      balance: 0,
-      apy: "3.50%",
+      balance: lowRiskVaultBalance,
+      apy: `${lowRiskApy}%`,
       risk: "Low Risk",
       imageKey: "green_crystal",
     },
@@ -59,7 +62,7 @@ export default function PolystreamVaultPage() {
       id: 2,
       name: "Balanced Growth Vault",
       balance: mediumRiskVaultBalance,
-      apy: "3000%",
+      apy: `${mediumRiskApy}%`,
       risk: "Medium Risk",
       imageKey: "yellow_crystal",
     },
@@ -67,7 +70,7 @@ export default function PolystreamVaultPage() {
       id: 3,
       name: "Alpha Seeker Vault",
       balance: highRiskVaultBalance,
-      apy: "10000%",
+      apy: `${highRiskApy}%`,
       risk: "High Risk",
       imageKey: "red_crystal",
     },
@@ -199,7 +202,7 @@ export default function PolystreamVaultPage() {
               <View style={styles.overallApyContainer}>
                 <Text style={styles.overallApyLabel}>Overall APY</Text>
                 <Text style={styles.apy}>
-                  {resolveApyToString(vaultApy).split(" ")[0]}
+                  {(lowRiskApy + mediumRiskApy + highRiskApy) / 3}%
                 </Text>{" "}
               </View>
             </View>

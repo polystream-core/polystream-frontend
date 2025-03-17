@@ -17,11 +17,12 @@ import {
   MOCK_COMBINED_MEDIUM_RISK_VAULT_CA,
   MOCK_COMBINED_HIGH_RISK_VAULT_ABI,
   MOCK_COMBINED_HIGH_RISK_VAULT_CA,
+  MOCK_COMBINED_LOW_RISK_VAULT_ABI,
+  MOCK_COMBINED_LOW_RISK_VAULT_CA,
 } from "../contracts/MockCombinedVault.sol";
 import { MOCK_USDC_ABI, MOCK_USDC_CA } from "../contracts/MockUSDC.sol";
 import { baseSepolia } from "viem/chains";
 import { env } from "../constants/AppConfig";
-import { useApy } from "./useApy";
 
 export function useUserInfo() {
   const { wallets } = useEmbeddedEthereumWallet();
@@ -33,6 +34,7 @@ export function useUserInfo() {
   const [accountApy, setAccountApy] = useState<number>(-0.03);
   const [accountStatus, setAccountStatus] = useState<PillStatus>("active");
   const [vaultBalance, setVaultBalance] = useState<number>(0);
+  const [lowRiskVaultBalance, setLowRiskVaultBalance] = useState<number>(0);
   const [mediumRiskVaultBalance, setMediumRiskVaultBalance] =
     useState<number>(0);
   const [highRiskVaultBalance, setHighRiskVaultBalance] = useState<number>(0);
@@ -48,14 +50,13 @@ export function useUserInfo() {
   const [smartAccountAddress, setSmartAccountAddress] = useState("");
   const [isSmartAccountReady, setIsSmartAccountReady] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
-
   const embeddedWallets = isReady
     ? getAllUserEmbeddedEthereumWallets(user)
     : [];
   const primaryWallet = embeddedWallets.find(
     (wallet) => wallet.wallet_index === 0
   );
-  const provider = new ethers.JsonRpcProvider("https://sepolia.base.org", {
+  const provider = new ethers.JsonRpcProvider(env.BASE_SEPOLIA_RPC, {
     chainId: 84532,
     name: "Base Sepolia",
   });
@@ -76,6 +77,11 @@ export function useUserInfo() {
       MOCK_COMBINED_HIGH_RISK_VAULT_ABI,
       provider
     );
+    const lowRiskVaultContract = new Contract(
+      MOCK_COMBINED_LOW_RISK_VAULT_CA,
+      MOCK_COMBINED_LOW_RISK_VAULT_ABI,
+      provider
+    );
 
     // Fetch account balance
     const balanceBN = await usdcContract.balanceOf(address);
@@ -84,17 +90,33 @@ export function useUserInfo() {
     setAccountBalance(+formattedBalance.toFixed(0));
 
     // Fetch vault balance
-    const mediumRiskVaultBalance = await mediumRiskVaultContract.balanceOf(address);
-    const mediumRiskFormattedVaultBalance = Number(formatUnits(mediumRiskVaultBalance, 6));
-    console.log("Initial Medium Risk Vault Balance:", mediumRiskFormattedVaultBalance.toFixed(0));
+    const lowRiskVaultBalance = await lowRiskVaultContract.balanceOf(address);
+    const lowRiskFormattedVaultBalance = Number(
+      formatUnits(lowRiskVaultBalance, 6)
+    );
+
+    const mediumRiskVaultBalance = await mediumRiskVaultContract.balanceOf(
+      address
+    );
+    const mediumRiskFormattedVaultBalance = Number(
+      formatUnits(mediumRiskVaultBalance, 6)
+    );
 
     const highRiskVaultBalance = await highRiskVaultContract.balanceOf(address);
-    const highRiskFormattedVaultBalance = Number(formatUnits(highRiskVaultBalance, 6));
-    console.log("Initial High Risk Vault Balance:", highRiskFormattedVaultBalance.toFixed(0));
+    const highRiskFormattedVaultBalance = Number(
+      formatUnits(highRiskVaultBalance, 6)
+    );
 
-    setVaultBalance(Number(mediumRiskFormattedVaultBalance.toFixed(0)) + Number(highRiskFormattedVaultBalance.toFixed(0)));
-    setMediumRiskVaultBalance(Number(mediumRiskFormattedVaultBalance.toFixed(0)));
+    setVaultBalance(
+      Number(mediumRiskFormattedVaultBalance.toFixed(0)) +
+        Number(highRiskFormattedVaultBalance.toFixed(0)) +
+        Number(lowRiskFormattedVaultBalance.toFixed(0))
+    );
+    setMediumRiskVaultBalance(
+      Number(mediumRiskFormattedVaultBalance.toFixed(0))
+    );
     setHighRiskVaultBalance(Number(highRiskFormattedVaultBalance.toFixed(0)));
+    setLowRiskVaultBalance(Number(lowRiskFormattedVaultBalance.toFixed(0)));
   }
 
   // Initialize smart account
@@ -137,10 +159,17 @@ export function useUserInfo() {
         const address =
           await smartAccountClient.account.getCounterFactualAddress();
         console.log("Smart account address initialized: ", address);
+        const emailAddress =
+          user?.linked_accounts?.find((acc) => acc.type === "email")?.address ??
+          "";
 
         // Set the state values
         setSmartAccount(smartAccountClient);
         setSmartAccountAddress(address);
+        setEmail(emailAddress);
+        setName(emailAddress.split("@")[0]);
+        setUsername(emailAddress.split("@")[0]);
+        setEmbeddedWalletAddress(address);
         setIsSmartAccountReady(true);
 
         // Now that we have a valid address, fetch the balances
@@ -202,6 +231,11 @@ export function useUserInfo() {
 
     console.log("Fetching Vault Balance...");
     try {
+      const lowRiskVaultContract = new Contract(
+        MOCK_COMBINED_LOW_RISK_VAULT_CA,
+        MOCK_COMBINED_LOW_RISK_VAULT_ABI,
+        provider
+      );
       const mediumRiskVaultContract = new Contract(
         MOCK_COMBINED_MEDIUM_RISK_VAULT_CA,
         MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI,
@@ -214,26 +248,36 @@ export function useUserInfo() {
       );
 
       // Get user's balance in the vault
-      const highRiskVaultBalance = await mediumRiskVaultContract.balanceOf(
+      const lowRiskVaultBalance = await lowRiskVaultContract.balanceOf(
         smartAccountAddress
       );
-      const mediumRiskVaultBalance = await highRiskVaultContract.balanceOf(
+      const mediumRiskVaultBalance = await mediumRiskVaultContract.balanceOf(
+        smartAccountAddress
+      );
+      const highRiskVaultBalance = await highRiskVaultContract.balanceOf(
         smartAccountAddress
       );
       // Format with correct decimals
+      const lowRiskFormattedBalance = Number(
+        formatUnits(lowRiskVaultBalance, 6)
+      );
+
       const highRiskFormattedBalance = Number(
         formatUnits(highRiskVaultBalance, 6)
       );
       const mediumRiskFormattedBalance = Number(
         formatUnits(mediumRiskVaultBalance, 6)
       );
-      console.log(`High Risk Vault balance: ${highRiskFormattedBalance}`);
+      console.log(`Low Risk Vault balance: ${lowRiskFormattedBalance}`);
       console.log(`Medium Risk Vault balance: ${mediumRiskFormattedBalance}`);
+      console.log(`High Risk Vault balance: ${highRiskFormattedBalance}`);
       // Store the value
       setVaultBalance(
         Number(highRiskFormattedBalance.toFixed(0)) +
-          Number(mediumRiskFormattedBalance.toFixed(0))
+          Number(mediumRiskFormattedBalance.toFixed(0)) +
+          Number(lowRiskFormattedBalance.toFixed(0))
       );
+      setLowRiskVaultBalance(Number(lowRiskFormattedBalance.toFixed(0)));
       setMediumRiskVaultBalance(Number(mediumRiskFormattedBalance.toFixed(0)));
       setHighRiskVaultBalance(Number(highRiskFormattedBalance.toFixed(0)));
     } catch (error) {
@@ -320,6 +364,11 @@ export function useUserInfo() {
             MOCK_USDC_ABI,
             provider
           );
+          const lowRiskVaultContract = new Contract(
+            MOCK_COMBINED_LOW_RISK_VAULT_CA,
+            MOCK_COMBINED_LOW_RISK_VAULT_ABI,
+            provider
+          );
           const mediumRiskVaultContract = new Contract(
             MOCK_COMBINED_MEDIUM_RISK_VAULT_CA,
             MOCK_COMBINED_MEDIUM_RISK_VAULT_ABI,
@@ -342,6 +391,12 @@ export function useUserInfo() {
             setAccountBalance(+formattedBalance.toFixed(0));
 
             // Fetch vault balance directly using the address
+            const lowRiskVaultBalance = await lowRiskVaultContract.balanceOf(
+              address
+            );
+            const lowRiskFormattedVaultBalance = Number(
+              formatUnits(lowRiskVaultBalance, 6)
+            );
             const mediumRiskVaultBalance =
               await mediumRiskVaultContract.balanceOf(address);
             const mediumRiskFormattedVaultBalance = Number(
@@ -354,6 +409,10 @@ export function useUserInfo() {
               formatUnits(highRiskVaultBalance, 6)
             );
             console.log(
+              "Reinitialized Low Risk Vault Balance:",
+              lowRiskFormattedVaultBalance.toFixed(0)
+            );
+            console.log(
               "Reinitialized Medium Risk Vault Balance:",
               mediumRiskFormattedVaultBalance.toFixed(0)
             );
@@ -363,7 +422,11 @@ export function useUserInfo() {
             );
             setVaultBalance(
               Number(mediumRiskFormattedVaultBalance.toFixed(0)) +
-                Number(highRiskFormattedVaultBalance.toFixed(0))
+                Number(highRiskFormattedVaultBalance.toFixed(0)) +
+                Number(lowRiskFormattedVaultBalance.toFixed(0))
+            );
+            setLowRiskVaultBalance(
+              Number(lowRiskFormattedVaultBalance.toFixed(0))
             );
             setMediumRiskVaultBalance(
               Number(mediumRiskFormattedVaultBalance.toFixed(0))
@@ -400,11 +463,6 @@ export function useUserInfo() {
     console.log("Balance refresh completed");
   }
 
-   useEffect(() => {
-      console.log("Medium risk balance in useUserInfo:", mediumRiskVaultBalance);
-      console.log("High risk balance in useUserInfo:", highRiskVaultBalance);
-    }, [mediumRiskVaultBalance, highRiskVaultBalance]);
-
   return {
     accountBalance,
     accountApy,
@@ -432,6 +490,7 @@ export function useUserInfo() {
     smartAccount,
     isSmartAccountReady,
     isInitializing,
+    lowRiskVaultBalance,
     mediumRiskVaultBalance,
     highRiskVaultBalance,
   };

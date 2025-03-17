@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,12 +12,13 @@ import { colors } from "@/src/constants/Colors";
 import { fonts } from "@/src/constants/Fonts";
 import { router } from "expo-router";
 import { images } from "@/src/constants/Images";
+import { useApy } from "@/src/hooks/useApy";
 import ChatButton from "@/src/components/chat/ChatButton";
 import ChatModal from "@/src/components/chat/ChatModal";
 
 export default function MarketScreen() {
   const [chatVisible, setChatVisible] = useState(false);
-
+  const { lowRiskApy, mediumRiskApy, highRiskApy } = useApy();
   const getCrystalImage = (risk: string): ImageSourcePropType => {
     if (risk.toLowerCase().includes("low")) {
       return images.green_crystal;
@@ -43,31 +44,38 @@ export default function MarketScreen() {
     {
       id: 1,
       name: "Conservative Yield",
-      apy: "3.50%",
+      apy: `${lowRiskApy}%`,
       risk: "Low Risk",
       poolSize: 2500000,
-      description: "This low-risk strategy focuses on stable yields through diversified lending protocols and blue-chip liquid staking derivatives. Perfect for those seeking capital preservation with modest returns.",
-      imageKey: "green_crystal"
+      description:
+        "This low-risk strategy focuses on stable yields through diversified lending protocols and blue-chip liquid staking derivatives. Perfect for those seeking capital preservation with modest returns.",
+      imageKey: "green_crystal",
     },
     {
       id: 2,
       name: "Balanced Growth",
-      apy: "3000%",
+      apy: `${mediumRiskApy}%`,
       risk: "Medium Risk",
       poolSize: 1250000,
-      description: "A balanced approach allocating capital across multiple DeFi protocols with moderate risk exposure. This strategy optimizes for consistent returns while adapting to changing market conditions.",
-      imageKey: "yellow_crystal"
+      description:
+        "A balanced approach allocating capital across multiple DeFi protocols with moderate risk exposure. This strategy optimizes for consistent returns while adapting to changing market conditions.",
+      imageKey: "yellow_crystal",
     },
     {
       id: 3,
       name: "Alpha Seeker",
-      apy: "10000%",
+      apy: `${highRiskApy}%`,
       risk: "High Risk",
       poolSize: 750000,
-      description: "Our highest yield strategy leveraging advanced DeFi techniques including strategic position management and yield farming across emerging protocols with higher risk profiles for maximum returns.",
-      imageKey: "red_crystal"
+      description:
+        "Our highest yield strategy leveraging advanced DeFi techniques including strategic position management and yield farming across emerging protocols with higher risk profiles for maximum returns.",
+      imageKey: "red_crystal",
     },
   ];
+
+  useEffect(() => {
+    console.log("APY Data: ", lowRiskApy);
+  }, [lowRiskApy]);
 
   return (
     <View style={styles.container}>
@@ -130,10 +138,7 @@ export default function MarketScreen() {
       <ChatButton onPress={() => setChatVisible(true)} />
 
       {/* Chat Modal */}
-      <ChatModal
-        visible={chatVisible}
-        onClose={() => setChatVisible(false)}
-      />
+      <ChatModal visible={chatVisible} onClose={() => setChatVisible(false)} />
     </View>
   );
 }
@@ -223,21 +228,21 @@ const styles = StyleSheet.create({
     color: colors.black.primary,
   },
   decorativeElement: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     opacity: 0.2,
     zIndex: 0,
-    pointerEvents: 'none'
+    pointerEvents: "none",
   },
   backgroundLogo: {
     position: "absolute",
     width: 200,
     height: 200,
     opacity: 0.4,
-  }
+  },
 });
